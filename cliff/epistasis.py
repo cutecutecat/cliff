@@ -38,7 +38,7 @@ class Epi2Prob:
                     all_actual_base_exist[actual_base] += 1
         self.base_probability = {key: all_actual_base_exist[key] / all_possiable_base_exist[key] for key in self.possible_bases}
     
-    def table_show(self):
+    def table_format(self) -> PrettyTable:
         if self.base_probability ==None:
             self._calculate_prob()
 
@@ -61,7 +61,7 @@ class Epi2Prob:
         for i in range(max_len):
             table.add_column("res_{}".format(i+1), splits_keys[i])
             table.add_column("prob_{}".format(i+1), splits_vals[i])
-        print(table)
+        return table
 
 class Epistasis:
     def __init__(
