@@ -1,13 +1,17 @@
 from functools import cmp_to_key
 from itertools import combinations, product, zip_longest
 import logging
+from math import isnan
 import sys
 from typing import Union, cast
+from bisect import insort, bisect_left
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 import numpy as np
+from scipy.special import softmax
+from tqdm import tqdm
 
 from cliff.metadata import MetaData, NeighbourItem
 from cliff.parser.base import Scenery
@@ -19,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 LARGE = sys.float_info.max
 
 
-class Epi2Show:
+class Epi2Prob:
     @staticmethod
     def sort_key(a: tuple[int], b: tuple[int]):
         first_cmp = (len(a) > len(b)) - (len(a) < len(b))
@@ -28,16 +32,16 @@ class Epi2Show:
         else:
             return (a > b) - (a < b)
 
-    def __init__(self, varible: tuple[str], possible_bases: set[MULTI_RESIDUE], epi: dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
+    def __init__(self, possible_bases: set[MULTI_RESIDUE], epi: dict[MULTI_RESIDUE, VAL_EACH_RESIDUE]):
         self.max_keys_num = max(max(b) for b in possible_bases) + 1
-        self.varibles = varible
-        self.varibles_index = {key: i for i, key in enumerate(varible)}
 
         self.possible_bases: list[MULTI_RESIDUE] = sorted(
             list(possible_bases), key=cmp_to_key(self.sort_key))
+        self.possible_bases = list(
+            filter(lambda b: len(b) > 1, self.possible_bases))
         self.epi = epi
         self.orders = [len(base) for base in self.possible_bases]
-        self.cols = sum([len(epi[base]) for base in self.possible_bases])
+        self.base_prob: dict[MULTI_RESIDUE, float] = None
 
         # Prepare an cycle of colors
         max_order = max(self.orders)
@@ -46,73 +50,77 @@ class Epi2Show:
         color_scalar = int(max_order / len(self.color_cycle)) + 1
         self.color_cycle *= color_scalar
 
-        select = []
-        for base in self.possible_bases:
-            select.extend([len(base)] * len(epi[base]))
-        self.colors_for_graph = np.array([mpl.colors.colorConverter.to_rgba(
-            self.color_cycle[i - 1]) for i in select])
-        # Prepare figure
-        self.fig = plt.figure()
-        gs = mpl.gridspec.GridSpec(3, 1,
-                                   height_ratios=[1, 1, 0.3],
-                                   hspace=0.00)
+    def _calculate_prob(self):
+        base_all_prob: dict[MULTI_RESIDUE, list[float]] = {
+            key: [] for key in self.possible_bases}
+        # softmax化
+        for _, val_res in self.epi.items():
+            val_res_keys = val_res.keys()
 
+            val_res_softmax = softmax([1/val_res[k] for k in val_res_keys])
+            for i, bases in enumerate(val_res_keys):
+                for b in bases:
+                    if b in base_all_prob:
+                        base_all_prob[b].append(val_res_softmax[i])
+        self.base_prob = {key: np.mean(
+            base_all_prob[key]) for key in self.possible_bases}
+
+    def plot(self) -> Figure:
+        if self.base_prob == None:
+            self._calculate_prob()
+
+        # Create a plot with an upper and lower panel, sharing the x-axis
+        fig = plt.figure()
+        gs = mpl.gridspec.GridSpec(2, 1,
+                                   height_ratios=[1, 1],
+                                   hspace=0.00)
+        values = [self.base_prob[k] for k in self.possible_bases]
         ax = [plt.subplot(gs[0])]
         ax.append(plt.subplot(gs[1], sharex=ax[0]))
-        ax.append(plt.subplot(gs[2], sharex=ax[0]))
-        self.bar_axis = ax[0]
-        self.residue_axis = ax[1]
-        self.chars_table = ax[2]
-        # Set tick invisible
-        for axis in [self.bar_axis.xaxis,
-                     self.residue_axis.xaxis, self.residue_axis.yaxis,
-                     self.chars_table.xaxis, self.chars_table.yaxis]:
-            self.invisible(axis)
+        bar_axis = ax[0]
+        grid_axis = ax[1]
 
-    @staticmethod
-    def invisible(axis):
-        for tick in axis.get_major_ticks():
+        colors_for_bar = np.array([mpl.colors.colorConverter.to_rgba(
+            self.color_cycle[i - 1]) for i in self.orders])
+        bar_axis.bar(np.arange(len(values)), values,
+                     width=0.9,
+                     color=colors_for_bar,
+                     linewidth=1)
+
+        grid_corr = np.zeros((self.max_keys_num, len(self.orders), 4))
+        for i, bases in enumerate(self.possible_bases):
+            for b in bases:
+                grid_corr[b, i] = colors_for_bar[i]
+        grid_axis.imshow(grid_corr)
+
+        grid_axis.set_xticks(np.arange(-.5, len(self.orders), 1), minor=True)
+        grid_axis.set_yticks(np.arange(-.5, self.max_keys_num, 1), minor=True)
+        for tick in grid_axis.xaxis.get_major_ticks():
             tick.tick1line.set_visible(False)
             tick.tick2line.set_visible(False)
             tick.label1.set_visible(False)
             tick.label2.set_visible(False)
-
-    def plot(self) -> Figure:
-        values = []
-        for bases in self.possible_bases:
-            inner_dict = self.epi[bases]
-            chars = sorted(inner_dict.keys())
-            values.extend([inner_dict[c] for c in chars])
-
-        self.bar_axis.bar(np.arange(len(values)), values,
-                          width=0.9,
-                          color=self.colors_for_graph,
-                          linewidth=1)
-
-        now_at = 0
-        residue_corr = np.zeros((self.max_keys_num, self.cols, 4))
-
-        chars_table = []
-        for bases in self.possible_bases:
-            for chars, _ in self.epi[bases].items():
-                residue_corr[bases, now_at, :] = self.colors_for_graph[now_at]
-
-                chars_table.append([c for c in chars])
-                now_at += 1
-        chars_col = list(zip_longest(*chars_table, fillvalue=''))
-        self.chars_table.table(cellText=chars_col)
-        self.chars_table.axis('off')
-        self.residue_axis.imshow(residue_corr)
-
-        self.residue_axis.set_xticks(np.arange(-.5, self.cols, 1), minor=True)
-        self.residue_axis.set_yticks(
-            np.arange(-.5, self.max_keys_num, 1), minor=True)
-        self.residue_axis.grid(which='minor', color='black',
-                               linestyle='-', linewidth=1)
-        return self.fig
+        for tick in grid_axis.yaxis.get_major_ticks():
+            tick.tick1line.set_visible(False)
+            tick.tick2line.set_visible(False)
+            tick.label1.set_visible(False)
+            tick.label2.set_visible(False)
+        for tick in bar_axis.yaxis.get_major_ticks():
+            tick.tick1line.set_visible(False)
+            tick.tick2line.set_visible(False)
+            tick.label1.set_visible(False)
+            tick.label2.set_visible(False)
+        for tick in bar_axis.xaxis.get_major_ticks():
+            tick.tick1line.set_visible(False)
+            tick.tick2line.set_visible(False)
+            tick.label1.set_visible(False)
+            tick.label2.set_visible(False)
+        grid_axis.grid(which='minor', color='black',
+                       linestyle='-', linewidth=1)
+        return fig
 
 
-class Epistasis:
+class Connection:
     def __init__(
         self, scenery: Scenery, max_order: int, variables: Union[list[str], str]
     ) -> None:
@@ -128,12 +136,11 @@ class Epistasis:
         self.max_order = max_order
 
         # inner calculator varibles
-        self.epi_net: EPI_NET = {}
-        # TODO: remove
+        self.epi_net_base: EPI_NET_BASE = {}
         self.possible_bases: set[MULTI_RESIDUE] = set()
 
-    def to_draw(self, epi: dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]) -> Epi2Show:
-        return Epi2Show(self.variables, self.possible_bases, epi)
+    def to_prob(self, epi: dict[MULTI_RESIDUE, VAL_EACH_RESIDUE]) -> Epi2Prob:
+        return Epi2Prob(self.possible_bases, epi)
 
     def cal_epi_link(
         self, neighbour
@@ -151,12 +158,13 @@ class Epistasis:
                     epi_link[key].append((seq_i_index, neighbour))
         return epi_link
 
-    def calculate_order(
+    def calculate_order_base(
         self,
         sorted_at_key: MULTI_RESIDUE,
+        used_base: tuple[MULTI_RESIDUE],
         neighbour=None,
-    ) -> EPI_EACH_RESIDUE:
-        used_base = sorted_at_key
+    ) -> float:
+        used_base = tuple(sorted(used_base))
         if neighbour == None:
             meta = MetaData(self.scenery, self.variables)
             meta.get_neighbour(used_base, tqdm_enable=False)
@@ -194,19 +202,54 @@ class Epistasis:
         lower_base_comb = mk_combine_subset(used_base)
         for lower_base, seq in product(lower_base_comb, possiable_keys):
             # 有可能低阶数据不存在，这时给一个nan指标
-            lower_index = fetch_lower_select(lower_base, sorted_at_key)
+            lower_multi_res_raw: list[int] = []
+            for multi_residue in lower_base:
+                lower_multi_res_raw.extend([i for i in multi_residue])
+            lower_multi_res: MULTI_RESIDUE = tuple(lower_multi_res_raw)
+
+            lower_index = fetch_lower_select(lower_multi_res, sorted_at_key)
             lower_seq = select_substr(seq, lower_index)
+            if (
+                lower_base not in self.epi_net_base
+                or lower_multi_res not in self.epi_net_base[lower_base]
+            ):
+                self.calculate_order_base(
+                    lower_multi_res, lower_base, neighbour)
+            if lower_seq in self.epi_net_base[lower_base][lower_multi_res]:
+                epi_values[seq] -= self.epi_net_base[lower_base][lower_multi_res][
+                    lower_seq
+                ]
+            else:
+                epi_values[seq] = float("nan")
 
-            epi_values[seq] -= self.epi_net[lower_base][lower_seq]
+        self.epi_net_base.setdefault(used_base, {})[sorted_at_key] = epi_values
+        var: float = np.var(
+            [val for _, val in epi_values.items() if not isnan(val)])
+        print(var)
+        return var
 
-        self.epi_net[sorted_at_key] = epi_values
-        return epi_values
+    def calculate_order(self, sorted_at_key: MULTI_RESIDUE) -> VAL_EACH_RESIDUE:
+        # 计算某个位点组合的所有氨基酸组合的上位
+        # 计算（0，1，2）其中计差组（1，2） 变化组（0）A->E 其余组(3, 4)
+        # 两组样例数据
+        # ABCDE -> EBCDE = ABC - EBC
+        # ABCPQ -> EBCPQ = ABC - EBC
 
-    def calculate(self) -> dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]:
+        # 计算实时局部差值邻接表
+        # (0, 1, 2) = （0， 1）+（2） 实时计算它的局部差值
+        # 计算可用基
+        bases = gen_lower_base(sorted_at_key)
+        epi_ans: VAL_EACH_RESIDUE = {}
+        for used_base in tqdm(bases):
+            epi_ans[used_base] = self.calculate_order_base(
+                sorted_at_key, used_base)
+        return epi_ans
+
+    def calculate(self) -> dict[MULTI_RESIDUE, VAL_EACH_RESIDUE]:
         """
         ret: {(0, 1):{("A","B"): 0.1, ("A","C"): 1.2, ("B","C"): 0.5}}
         """
-        epi_val: dict[MULTI_RESIDUE, EPI_EACH_RESIDUE] = {}
+        epi_val: dict[MULTI_RESIDUE, VAL_EACH_RESIDUE] = {}
         # 计算上位效应
         for i in range(1, self.max_order + 1):
             logging.info("begin calculate epistasis net -- order {}".format(i))

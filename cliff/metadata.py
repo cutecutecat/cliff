@@ -11,6 +11,7 @@ from cliff.parser.base import Scenery
 MULTI_RESIDUE = tuple[int]
 SEQ = tuple[str]
 
+
 class NeighbourItem:
     # ABCD -> ABCE
     # ABCE
@@ -56,7 +57,7 @@ class Neighbourhood:
             ret.append(target[last:res])
             last = len(target) if i == len(index) - 1 else index[i + 1]
             ret.append(sub[i])
-            ret.append(target[res + 1 : last])
+            ret.append(target[res + 1: last])
         return "".join(ret)
 
     @staticmethod
@@ -71,14 +72,16 @@ class Neighbourhood:
         if self.tqdm_enable:
             iter = tqdm(
                 iter,
-                desc="creating {}".format(self.neighbour_path),
+                desc="creating neighbour",
                 total=self.sequence_num * len(self.SUBSTITUDE_TUPLE),
             )
         for seq_index, (sub_index, sub_char) in iter:
             seq_index, sub_index, sub_char = cast(
-                tuple[int, MULTI_RESIDUE, SEQ], (seq_index, sub_index, sub_char),
+                tuple[int, MULTI_RESIDUE,
+                      SEQ], (seq_index, sub_index, sub_char),
             )
-            new_seq = self.substitude(self.sequence[seq_index], sub_index, sub_char)
+            new_seq = self.substitude(
+                self.sequence[seq_index], sub_index, sub_char)
             if new_seq not in self.seq_to_index:
                 continue
             item = NeighbourItem()
@@ -148,5 +151,5 @@ class MetaData:
     ) -> None:
         use_keys = tuple((i,) for i in range(self.sequence_length))
         self.neighbour: dict[int, tuple[NeighbourItem]] = Neighbourhood(
-            use_keys, self.sequence, self.variables, self.neighbour_path, tqdm_enable
+            use_keys, self.sequence, self.variables, tqdm_enable
         ).get()
