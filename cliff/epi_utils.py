@@ -4,6 +4,7 @@ from typing import Generator, Union, cast
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import networkx as nx
 
 from cliff.metadata import SEQ, MULTI_RESIDUE
 
@@ -135,30 +136,35 @@ def get_epi_from_diff(
     # V = [v0, v1, v2, ...]
     # H = [1, 1, 1, ..., 1]
     # H =  [..., 1, -1, ...]
+    G = nx.Graph()
+    # 研究位点作为点，邻接组作为边，构图
     diff_keys = list(diff.keys())
-    diff_vals = [diff[key] for key in diff_keys]
-    # 结果矩阵
-    Y = np.hstack([[0], diff_vals])
-    # 系数矩阵
     keys_index = {key: i for i, key in enumerate(possiable_keys)}
-    edges_positive = [[i+1, keys_index[diff[0]]]
-                      for i, diff in enumerate(diff_keys)]
-    edges_negetive = [[i+1, keys_index[diff[1]]]
-                      for i, diff in enumerate(diff_keys)]
+    epi_values = {key: 0.0 for key in possiable_keys}
 
-    D = np.zeros((len(diff) + 1, len(possiable_keys)))
-    D[0, :] = 1.0
-    D[tuple(zip(*edges_positive))] = 1.0
-    D[tuple(zip(*edges_negetive))] = -1.0
+    edges = [(keys_index[diff[0]], keys_index[diff[1]]) for diff in diff_keys]
+    G.add_edges_from(edges)
+    rings: Generator[set[int], None, None] = nx.connected_components(G)
 
-    LR = LinearRegression()
-    # 训练模型
-    # sample_weight = [1.0, 0.1, ...]
-    sample_weight = 0.1 * np.ones_like(Y)
-    sample_weight[0] = 1.0
-    LR.fit(D, Y, sample_weight)
-    X = LR.coef_
-    epi_values = {possiable_keys[ind]: val for ind, val in enumerate(X)}
+    for ring in rings:
+        G_subset = G.subgraph(ring)
+        edges = nx.bfs_edges(G_subset, 0)
+        edges = list(edges)
+        for edge in edges:
+            edge = cast(tuple[int, int], edge)
+            src, tgt = edge
+            src_seq, tgt_seq = possiable_keys[src], possiable_keys[tgt]
+            # one of (src_seq, tgt_seq) / (tgt_seq, src_seq) must in diff
+            delta = (
+                diff[(src_seq, tgt_seq)]
+                if (src_seq, tgt_seq) in diff
+                else -diff[(tgt_seq, src_seq)]
+            )
+            epi_values[tgt_seq] = epi_values[src_seq] + delta
+        select_values = [epi_values[possiable_keys[v]] for v in ring]
+        value_mean = sum(select_values) / len(select_values)
+        for v in ring:
+            epi_values[possiable_keys[v]] -= value_mean
     return epi_values
 
 

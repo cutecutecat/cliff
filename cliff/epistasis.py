@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 import numpy as np
+from joblib import Parallel, delayed
 
 from cliff.metadata import MetaData, NeighbourItem
 from cliff.parser.base import Scenery
@@ -189,36 +190,35 @@ class Epistasis:
                 for key, value in diff_group.items()}
 
         epi_values = get_epi_from_diff(diff, possiable_keys)
-        # 此处存在差异：SUB操作，计算减去低阶量
+
+        return possiable_keys, epi_values
+
+    def sub(self, epi_value: EPI_EACH_RESIDUE, possiable_keys: list[SEQ], sorted_at_key: MULTI_RESIDUE):
+        # SUB操作，计算减去低阶量
         # (0, 1, 2) - (0, 1) - (0, 2) - (1, 2) - (0) - (1) - (2)
-        lower_base_comb = mk_combine_subset(used_base)
+        lower_base_comb = mk_combine_subset(sorted_at_key)
         for lower_base, seq in product(lower_base_comb, possiable_keys):
             # 有可能低阶数据不存在，这时给一个nan指标
             lower_index = fetch_lower_select(lower_base, sorted_at_key)
             lower_seq = select_substr(seq, lower_index)
-
-            epi_values[seq] -= self.epi_net[lower_base][lower_seq]
-
-        self.epi_net[sorted_at_key] = epi_values
-        return epi_values
+            epi_value[seq] -= self.epi_net[lower_base][lower_seq]
+        self.epi_net[sorted_at_key] = epi_value
 
     def calculate(self) -> dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]:
         """
         ret: {(0, 1):{("A","B"): 0.1, ("A","C"): 1.2, ("B","C"): 0.5}}
         """
-        epi_val: dict[MULTI_RESIDUE, EPI_EACH_RESIDUE] = {}
         # 计算上位效应
+        epi_order_keys: list[MULTI_RESIDUE] = []
         for i in range(1, self.max_order + 1):
-            logging.info("begin calculate epistasis net -- order {}".format(i))
-            epi_order_keys: list[MULTI_RESIDUE] = list(
-                combinations(range(self.sequence_length), i)
-            )
+            epi_order_keys.extend(
+                list(combinations(range(self.sequence_length), i)))
             if i < self.max_order + 1:
                 self.possible_bases.update(set(epi_order_keys))
             # 此处可做并行优化
-            for sorted_at_key in epi_order_keys:
-                logging.info("epistasis net -- order {}".format(sorted_at_key))
-                sorted_at_key = cast(MULTI_RESIDUE, sorted_at_key)
-                epi_order = self.calculate_order(sorted_at_key)
-                epi_val[sorted_at_key] = epi_order
-        return epi_val
+        all_ans = Parallel(n_jobs=len(epi_order_keys))(delayed(self.calculate_order)(
+            sorted_at_key) for sorted_at_key in epi_order_keys)
+
+        for (possiable_keys, epi_value), sorted_at_key in zip(all_ans, epi_order_keys):
+            self.sub(epi_value, possiable_keys, sorted_at_key)
+        return self.epi_net
