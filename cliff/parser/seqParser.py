@@ -7,7 +7,7 @@ import pandas as pd
 from .base import Parser, Scenery
 
 
-class SeqArgs:
+class SeqArgs:  # pylint: disable=too-few-public-methods
     """arguments for `sequence` parser"""
     sequence_label: str
     fitness_label: str

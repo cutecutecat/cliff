@@ -8,17 +8,19 @@ from .metadata import MetaData
 
 @click.group()
 def cli():
+    """intro of argument program"""
     pass
 
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True))
-@click.option('-s', help='mutation label of csv file', type=str)
-@click.option('-f', help='fitness label of csv file', type=str)
-@click.option('-w', help='wild type sequence of dataset', type=str)
-@click.option('-v', help='index offset of dataset', type=int, default=0)
-@click.option('-c', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
-def rug_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str):
+@click.option('-s', '--symbol', help='mutation label of csv file', type=str)
+@click.option('-f', '--fitness', help='fitness label of csv file', type=str)
+@click.option('-w', '--wild_type', help='wild type sequence of dataset', type=str)
+@click.option('-v', '--vt_offset', help='index offset of dataset', type=int, default=0)
+@click.option('-c', '--chars', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
+def rug_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str):  # pylint: disable=too-many-arguments
+    """calculate ruggness on mutation format dataset"""
     click.echo('[Mutation] Dataset -> [Ruggness] cauculation')
     click.echo(f'file: {filename}')
     click.echo('[Mutation] Args:')
@@ -42,10 +44,11 @@ def rug_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset:
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True))
-@click.option('-s', help='sequence label of csv file', type=str)
-@click.option('-f', help='fitness label of csv file', type=str)
-@click.option('-c', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
+@click.option('-s', '--symbol', help='mutation label of csv file', type=str)
+@click.option('-f', '--fitness', help='fitness label of csv file', type=str)
+@click.option('-c', '--chars', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
 def rug_seq(filename: str, symbol: str, fitness: str, chars: str):
+    """calculate ruggness on sequence format dataset"""
     click.echo('[Sequence] Dataset -> [Epistasis] cauculation')
     click.echo(f'file: {filename}')
     click.echo('[Sequence] Args:')
@@ -65,13 +68,14 @@ def rug_seq(filename: str, symbol: str, fitness: str, chars: str):
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True))
-@click.option('-s', help='mutation label of csv file', type=str)
-@click.option('-f', help='fitness label of csv file', type=str)
-@click.option('-w', help='wild type sequence of dataset', type=str)
-@click.option('-v', help='index offset of dataset', type=int, default=0)
-@click.option('-c', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
-@click.option('-o', help='max order of epistasis calculation', type=int)
-def epi_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str, max_order: int):
+@click.option('-s', '--symbol', help='mutation label of csv file', type=str)
+@click.option('-f', '--fitness', help='fitness label of csv file', type=str)
+@click.option('-w', '--wild_type', help='wild type sequence of dataset', type=str)
+@click.option('-v', '--vt_offset', help='index offset of dataset', type=int, default=0)
+@click.option('-c', '--chars', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
+@click.option('-o', '--max_order', help='max order of epistasis calculation', type=int)
+def epi_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str, max_order: int):  # pylint: disable=too-many-arguments
+    """calculate epistasis on mutation format dataset"""
     click.echo('[Mutation] Dataset -> [Epistasis] cauculation')
     click.echo(f'file: {filename}')
     click.echo('[Mutation] Args:')
@@ -100,11 +104,12 @@ def epi_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset:
 
 @cli.command()
 @click.argument('filename', type=click.Path(exists=True))
-@click.option('-s', help='sequence label of csv file', type=str)
-@click.option('-f', help='fitness label of csv file', type=str)
-@click.option('-c', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
-@click.option('-o', help='max order of epistasis calculation', type=int)
+@click.option('-s', '--symbol', help='mutation label of csv file', type=str)
+@click.option('-f', '--fitness', help='fitness label of csv file', type=str)
+@click.option('-c', '--chars', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
+@click.option('-o', '--max_order', help='max order of epistasis calculation', type=int)
 def epi_seq(filename: str, symbol: str, fitness: str, chars: str, max_order: int):
+    """calculate epistasis on sequence format dataset"""
     click.echo('[Sequence] Dataset -> [Epistasis] cauculation')
     click.echo(f'file: {filename}')
     click.echo('[Sequence] Args:')

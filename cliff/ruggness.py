@@ -12,7 +12,7 @@ class Ruggness:  # pylint: disable=too-few-public-methods
     def __init__(self, meta: MetaData) -> None:
         self.meta = meta
         if len(meta.neighbour) == 0:
-            self.meta.get_neighbour(save=True)
+            self.meta.get_neighbour()
 
         self.sequence_length = self.meta.sequence_length
         self.neighbour = self.meta.neighbour
@@ -46,7 +46,7 @@ class Ruggness:  # pylint: disable=too-few-public-methods
             for item in items:
                 mut_index = item.index[0]
                 diff_value = self.fitness[item.target] - self.fitness[i]
-                mutation_derivation[f"{mut_index}{item}"].append(
+                mutation_derivation[f"{mut_index}{item.diff}"].append(
                     diff_value
                 )
 

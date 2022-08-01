@@ -1,3 +1,4 @@
+"""utils for cauculating epistasis"""
 from bisect import insort
 from itertools import combinations
 from typing import Generator, Union, cast, List, Tuple, Dict, Set
@@ -36,7 +37,7 @@ def select_substr(
     --------
     >> assert(select_substr("ABCDE", [0, 2, 3]) == ('A', 'C', 'E'))
     """
-    if type(select) == set:
+    if isinstance(select, set):
         select = sorted(List(select))
     select = cast(List[int], select)
     return tuple(src[s] for s in select)
@@ -71,14 +72,14 @@ def mk_combine_subset(
     return ret
 
 
-def mk_combine(n: int, max_order: int) -> List[MULTI_RESIDUE]:
+def mk_combine(num: int, max_order: int) -> List[MULTI_RESIDUE]:
     """
     generate combination of order 1 to max_order 
     for [1, 2, ..., n] input
 
     Parameters
     ----------
-    n: int
+    num: int
         input elements range
 
     max_order: int
@@ -96,7 +97,7 @@ def mk_combine(n: int, max_order: int) -> List[MULTI_RESIDUE]:
     ret: List[MULTI_RESIDUE] = []
     for order in range(1, max_order + 1):
         once: List[MULTI_RESIDUE] = list(
-            combinations([j for j in range(n)], order))
+            combinations([j for j in range(num)], order))
         ret.extend(once)
     return ret
 
@@ -162,18 +163,18 @@ def get_epi_from_diff(
     epi_values : EPI_EACH_RESIDUE
         averaging epistasis value of all variance combination in each residue
     """
-    G = nx.Graph()
+    graph = nx.Graph()
     diff_keys = list(diff.keys())
     keys_index = {key: i for i, key in enumerate(possiable_keys)}
     epi_values = {key: 0.0 for key in possiable_keys}
 
     edges = [(keys_index[diff[0]], keys_index[diff[1]]) for diff in diff_keys]
-    G.add_edges_from(edges)
-    rings: Generator[Set[int], None, None] = nx.connected_components(G)
+    graph.add_edges_from(edges)
+    rings: Generator[Set[int], None, None] = nx.connected_components(graph)
 
     for ring in rings:
-        G_subset = G.subgraph(ring)
-        edges = nx.bfs_edges(G_subset, 0)
+        graph_subset = graph.subgraph(ring)
+        edges = nx.bfs_edges(graph_subset, 0)
         edges = list(edges)
         for edge in edges:
             edge = cast(Tuple[int, int], edge)
@@ -188,8 +189,8 @@ def get_epi_from_diff(
             epi_values[tgt_seq] = epi_values[src_seq] + delta
         select_values = [epi_values[possiable_keys[v]] for v in ring]
         value_mean = sum(select_values) / len(select_values)
-        for v in ring:
-            epi_values[possiable_keys[v]] -= value_mean
+        for point in ring:
+            epi_values[possiable_keys[point]] -= value_mean
     return epi_values
 
 

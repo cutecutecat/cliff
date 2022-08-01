@@ -6,7 +6,7 @@ import pandas as pd
 from .base import Parser, Scenery
 
 
-class MutArgs:
+class MutArgs:  # pylint: disable=too-few-public-methods
     """arguments for `mutation` parser"""
     mutation_label: str
     fitness_label: str
