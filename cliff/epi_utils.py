@@ -72,7 +72,7 @@ def mk_combine_subset(
 
 def mk_combine(num: int, max_order: int) -> List[MultiResidue]:
     """
-    generate combination of order 1 to max_order 
+    generate combination of order 1 to max_order
     for [1, 2, ..., n] input
 
     Parameters
