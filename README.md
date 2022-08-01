@@ -26,16 +26,16 @@ The Epistasis:
 
 ![img](/docs/epistasis.png)
 
-# install
+## install
 
 Run
 ```shell
 pip install git+https //github.com/cutecutecat/cliff
 ```
 
-# usage
+## usage
 
-## use as a library
+### use as a library
 
 when calculating Ruggness:
 
@@ -77,18 +77,18 @@ fig = show_model.plot()
 fig.save_fig('output.png')
 ```
 
-## use as a command line program
+### use as a command line program
 
 refer to help of `cliff --help`
 
-# input file format
+## input file format
 
 Input file should be a `csv` format file, which should at least contain two columns for different parser. We recommend using `sequence` parser for sake of convenience.
 
-## sequence parser
+### sequence parser
 
-* `sequence` for `str` input sequence like `ACGT`
-* `fitness` for `float` sequence fitness like `1.25`
+*   `sequence` for `str` input sequence like `ACGT`
+*   `fitness` for `float` sequence fitness like `1.25`
 
 The name of these two columns need not to be `sequence` or `fitness`, tell parser the right name in `SeqArgs` is enough.
 
@@ -102,10 +102,10 @@ file example:
 4,AAAAF,0.4392058266974471
 ```
 
-## mutation parser
+### mutation parser
 
-* `mutation` for `str` input mutation from wild type like `A2T:A3T`
-* `fitness` for `float` sequence fitness like `1.25`
+*   `mutation` for `str` input mutation from wild type like `A2T:A3T`
+*   `fitness` for `float` sequence fitness like `1.25`
 
 The name of these two columns need not to be `mutation` or `fitness`, tell parser the right name in `MutArgs` is enough.
 

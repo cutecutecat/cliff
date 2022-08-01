@@ -22,16 +22,16 @@ fitness = [0.1, 0.2, 0.4, 0.3, 0.3, 0.6, 0.8, 1.0]
 
 ![img](/docs/epistasis.png)
 
-# 安装方法
+## 安装方法
 
 执行
 ```shell
 pip install git+https //github.com/cutecutecat/cliff
 ```
 
-# 使用方法
+## 使用方法
 
-## 用作库调用
+### 用作库调用
 
 计算粗糙度:
 
@@ -73,18 +73,18 @@ fig = show_model.plot()
 fig.save_fig('output.png')
 ```
 
-## 用作命令行程序
+### 用作命令行程序
 
 参考 `cliff --help`
 
-# input file format
+## 输入文件格式
 
 输入文件需要符合`csv`格式，对于不同的解析器，至少需要包含两列。我们推荐使用`sequence parser`因为其更加简便。
 
-## sequence 解析器
+### sequence 解析器
 
-* `sequence` 格式 `str` 代表输入序列，例如 `ACGT`
-* `fitness` 格式 `float` 代表序列适应度，例如 `1.25`
+*   `sequence` 格式 `str` 代表输入序列，例如 `ACGT`
+*   `fitness` 格式 `float` 代表序列适应度，例如 `1.25`
 
 这两列的列名可以任意指定，不局限于 `sequence` 和 `fitness` , 只要在创建 `SeqArgs` 时正确指定参数即可。
 
@@ -98,10 +98,10 @@ fig.save_fig('output.png')
 4,AAAAF,0.4392058266974471
 ```
 
-## mutation 解析器
+### mutation 解析器
 
-* `mutation` 格式 `str` 代表突变对象，例如 `A2T:A3T`
-* `fitness` 格式 `float` 代表序列适应度，例如 `1.25`
+*   `mutation` 格式 `str` 代表突变对象，例如 `A2T:A3T`
+*   `fitness` 格式 `float` 代表序列适应度，例如 `1.25`
 
 这两列的列名可以任意指定，不局限于 `mutation` 和 `fitness` , 只要在创建 `MutArgs` 时正确指定参数即可。
 
