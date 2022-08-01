@@ -32,6 +32,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 REQUIRED = []
 with open(os.path.join(here, 'requirements.txt')) as f:
     REQUIRED = f.read().splitlines()
+print(REQUIRED)
 
 setup(
     name=NAME,
