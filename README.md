@@ -1,4 +1,8 @@
 # cliff -- Epistasis and Ruggness calculation
+![example workflow](https://github.com/cutecutecat/cliff/actions/workflows/pylint.yml/badge.svg)
+![example workflow](https://github.com/cutecutecat/cliff/actions/workflows/test.yml/badge.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/054200d1bba34de4a159ae578059e669)](https://www.codacy.com/gh/cutecutecat/cliff/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=cutecutecat/cliff&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/054200d1bba34de4a159ae578059e669)](https://www.codacy.com/gh/cutecutecat/cliff/dashboard?utm_source=github.com&utm_medium=referral&utm_content=cutecutecat/cliff&utm_campaign=Badge_Coverage)
 
 [中文](/docs/README_CN.md) | [English](/README.md)
 
