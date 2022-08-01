@@ -1,8 +1,8 @@
 import unittest
-from os.path import join, dirname, abspath
+from os.path import join, dirname
 
 from click.testing import CliRunner
-from cliff.cli import rug_mut, rug_seq, epi_mut, epi_seq
+from cliff.client import rug_mut, rug_seq, epi_mut, epi_seq
 
 
 class TestArgCall(unittest.TestCase):
