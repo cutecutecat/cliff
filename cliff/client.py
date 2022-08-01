@@ -53,10 +53,10 @@ def rug_seq(filename: str, symbol: str, fitness: str, chars: str):
     click.echo(f'variables: [{chars}]')
 
     args = SeqArgs()
-    args.sequence_label = s
-    args.fitness_label = f
+    args.sequence_label = symbol
+    args.fitness_label = fitness
     scenery = SeqParser.parse(filename, args)
-    meta = MetaData(scenery, c)
+    meta = MetaData(scenery, chars)
 
     calculator = Ruggness(meta)
     rug = calculator.calculate()

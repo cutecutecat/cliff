@@ -88,10 +88,10 @@ class Neighbourhood:
                 continue
             item = NeighbourItem()
             item.target = self.seq_to_index[new_seq]
-            item.diff = "{}{}".format(
-                self.select(self.sequence[seq_index], sub_index),
-                self.select(new_seq, sub_index),
-            )
+
+            diff_before = self.select(self.sequence[seq_index], sub_index)
+            diff_after = self.select(new_seq, sub_index)
+            item.diff = f"{diff_before}{diff_after}"
             item.index = sub_index
 
             neighbour[seq_index].append(item)
@@ -141,7 +141,7 @@ class MetaData:
         self.neighbour: Dict[int, Tuple[NeighbourItem]] = {}
 
     def get_neighbour(
-        self, use_keys: Tuple[MULTI_RESIDUE] = tuple(), save=False, tqdm_enable=True
+        self, use_keys: Tuple[MULTI_RESIDUE] = tuple(), tqdm_enable=True
     ) -> None:
         use_keys = tuple((i,) for i in range(self.sequence_length))
         self.neighbour: Dict[int, Tuple[NeighbourItem]] = Neighbourhood(

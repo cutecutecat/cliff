@@ -1,10 +1,13 @@
+"""parser for `mutation` dataset"""
 from typing import Union, cast
 
-from .base import Parser, Scenery
 import pandas as pd
+
+from .base import Parser, Scenery
 
 
 class MutArgs:
+    """arguments for `mutation` parser"""
     mutation_label: str
     fitness_label: str
     wile_type: str
@@ -12,7 +15,9 @@ class MutArgs:
     vt_offset: int
 
 
-class MutParser(Parser):
+class MutParser(Parser):  # pylint: disable=too-few-public-methods
+    """parser for `mutation` dataset"""
+
     @staticmethod
     def generate_mut_seq(mut_line: str, wt: str, vt_offset: int) -> str:
         if len(mut_line) == 0:

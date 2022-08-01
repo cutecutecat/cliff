@@ -1,15 +1,21 @@
+"""parser for `mutation` dataset"""
 from typing import Union, cast
 
-from .base import Parser, Scenery
+
 import pandas as pd
+
+from .base import Parser, Scenery
 
 
 class SeqArgs:
+    """arguments for `sequence` parser"""
     sequence_label: str
     fitness_label: str
 
 
-class SeqParser(Parser):
+class SeqParser(Parser):  # pylint: disable=too-few-public-methods
+    """parser for `mutation` dataset"""
+
     @classmethod
     def parse(cls, data: Union[str, pd.DataFrame], args: SeqArgs) -> Scenery:
         if type(data) == str:
