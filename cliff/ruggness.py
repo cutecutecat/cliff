@@ -1,3 +1,4 @@
+"""Cauculation of dataset Ruggness"""
 from itertools import product
 from typing import Dict, List
 import numpy as np
@@ -5,7 +6,9 @@ import numpy as np
 from cliff.metadata import MetaData
 
 
-class Ruggness:
+class Ruggness:  # pylint: disable=too-few-public-methods
+    """Cauculation of dataset Ruggness"""
+
     def __init__(self, meta: MetaData) -> None:
         self.meta = meta
         if len(meta.neighbour) == 0:
@@ -26,7 +29,7 @@ class Ruggness:
             ruggness of scenery
         """
         mutation_label = [
-            "{}{}{}".format(m, n, k)
+            f"{m}{n}{k}"
             for m, n, k in product(
                 range(self.sequence_length), self.variables, self.variables
             )
@@ -41,9 +44,9 @@ class Ruggness:
             items = filter(lambda x: x.target > i, neighbour_of_one)
 
             for item in items:
-                index = item.index[0]
+                mut_index = item.index[0]
                 diff_value = self.fitness[item.target] - self.fitness[i]
-                mutation_derivation["{}{}".format(index, item.diff)].append(
+                mutation_derivation[f"{mut_index}{item}"].append(
                     diff_value
                 )
 

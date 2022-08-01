@@ -28,7 +28,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = '\n' + f.read()
 
 REQUIRED = []
-with open(os.path.join(here, 'requirements.txt')) as f:
+with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
     REQUIRED = f.read().splitlines()
 print(REQUIRED)
 

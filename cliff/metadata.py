@@ -1,6 +1,5 @@
+"""metadata contains data struct of mutation dataset"""
 from __future__ import annotations
-from os import getcwd
-from os.path import join
 from itertools import product
 from typing import cast, Union, Tuple, List, Dict, Set
 
@@ -13,6 +12,7 @@ SEQ = Tuple[str]
 
 
 class NeighbourItem:
+    """a `NeighbourItem` means the difference of two Neighboring sequences"""
     # ABCD -> ABCE
     # ABCE
     target: int
@@ -22,6 +22,8 @@ class NeighbourItem:
 
 
 class Neighbourhood:
+    """`Neighbourhood` means the adjacency list of sequences"""
+
     def __init__(
         self,
         use_residues: Tuple[MULTI_RESIDUE],
@@ -68,14 +70,14 @@ class Neighbourhood:
         neighbour: Dict[int, List[NeighbourItem]] = {
             i: [] for i in range(self.sequence_num)
         }
-        iter = product(range(self.sequence_num), self.SUBSTITUDE_TUPLE)
+        merge_iter = product(range(self.sequence_num), self.SUBSTITUDE_TUPLE)
         if self.tqdm_enable:
-            iter = tqdm(
-                iter,
+            merge_iter = tqdm(
+                merge_iter,
                 desc="creating neighbour",
                 total=self.sequence_num * len(self.SUBSTITUDE_TUPLE),
             )
-        for seq_index, (sub_index, sub_char) in iter:
+        for seq_index, (sub_index, sub_char) in merge_iter:
             seq_index, sub_index, sub_char = cast(
                 Tuple[int, MULTI_RESIDUE,
                       SEQ], (seq_index, sub_index, sub_char),

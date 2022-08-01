@@ -1,3 +1,5 @@
+"""do the unit test of the API calling."""
+
 import unittest
 from os.path import join, dirname
 
@@ -6,7 +8,10 @@ from cliff.parser import SeqArgs, SeqParser, MutArgs, MutParser, Scenery
 
 
 class TestLibCall(unittest.TestCase):
+    """do the unit test of the API calling."""
+
     def test_load_sequence(self):
+        """test load a sequence format csv"""
         args = SeqArgs()
         args.fitness_label = "Fitness"
         args.sequence_label = "Sequence"
@@ -18,6 +23,7 @@ class TestLibCall(unittest.TestCase):
         self.assertAlmostEqual(mean, 0.5111, places=3)
 
     def test_load_mutation(self):
+        """test load a mutation format csv"""
         args = MutArgs()
         args.fitness_label = "score"
         args.mutation_label = "variant"
@@ -31,6 +37,7 @@ class TestLibCall(unittest.TestCase):
         self.assertAlmostEqual(mean, 0.4625, places=3)
 
     def test_calculate_rug(self):
+        """test calculate ruggness"""
         chars = list("AT")
 
         scenery = Scenery()
@@ -47,6 +54,7 @@ class TestLibCall(unittest.TestCase):
         self.assertAlmostEqual(rug, 0.0095, places=3)
 
     def test_calculate_epi(self):
+        """test calculate epistasis"""
         chars = list("AT")
 
         scenery = Scenery()

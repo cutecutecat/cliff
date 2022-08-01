@@ -29,7 +29,8 @@ class Epi2Show:
         else:
             return (a > b) - (a < b)
 
-    def __init__(self, varible: Tuple[str], possible_keys: Set[MULTI_RESIDUE], epi: Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
+    def __init__(self, varible: Tuple[str], possible_keys: Set[MULTI_RESIDUE],
+                 epi: Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
         self.max_keys_num = max(max(b) for b in possible_keys) + 1
         self.varibles = varible
         self.varibles_index = {key: i for i, key in enumerate(varible)}
@@ -113,7 +114,7 @@ class Epi2Show:
         return self.fig
 
 
-class Epistasis:
+class Epistasis:  # pylint: disable=too-few-public-methods
     def __init__(
         self, scenery: Scenery, max_order: int, variables: Union[List[str], str]
     ) -> None:
@@ -193,7 +194,8 @@ class Epistasis:
 
         return possiable_keys, epi_values
 
-    def sub(self, epi_value: EPI_EACH_RESIDUE, possiable_keys: List[SEQ], sorted_at_key: MULTI_RESIDUE):
+    def sub(self, epi_value: EPI_EACH_RESIDUE, possiable_keys: List[SEQ],
+            sorted_at_key: MULTI_RESIDUE):
         # SUB操作，计算减去低阶量
         # (0, 1, 2) - (0, 1) - (0, 2) - (1, 2) - (0) - (1) - (2)
         lower_base_comb = mk_combine_subset(sorted_at_key)
