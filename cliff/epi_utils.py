@@ -2,8 +2,6 @@ from bisect import insort
 from itertools import combinations
 from typing import Generator, Union, cast
 
-import numpy as np
-from sklearn.linear_model import LinearRegression
 import networkx as nx
 
 from cliff.metadata import SEQ, MULTI_RESIDUE
@@ -19,7 +17,7 @@ def select_substr(
     src: Union[str, SEQ, list[str]], select: Union[MULTI_RESIDUE, list[int]]
 ) -> SEQ:
     """
-    utility for select sequence subset from string
+    select sequence subset from string
 
     Parameters
     ----------
@@ -45,18 +43,56 @@ def select_substr(
 
 
 def mk_combine_subset(
-    used_base: tuple[MULTI_RESIDUE],
+    all_res: tuple[MULTI_RESIDUE],
 ) -> list[tuple[MULTI_RESIDUE]]:
+    """
+    generate combination of multiply residues
+
+    Parameters
+    ----------
+    all_res: tuple[MULTI_RESIDUE]
+        several residues of comb input
+
+    Returns
+    -------
+    comb : list[tuple[MULTI_RESIDUE]]
+        result of combinations
+
+    Examples
+    --------
+    >> assert(mk_combine_subset(((1, 2), (3, 4))) == (((1, 2),), ((3, 4),), ((1, 2), (3, 4))))
+    """
     ret: list[tuple[MULTI_RESIDUE]] = []
-    for order in range(1, len(used_base)):
+    for order in range(1, len(all_res)):
         once: list[tuple[MULTI_RESIDUE]] = sorted(
-            list(combinations(used_base, order))
+            list(combinations(all_res, order))
         )
         ret.extend(once)
     return ret
 
 
 def mk_combine(n: int, max_order: int) -> list[MULTI_RESIDUE]:
+    """
+    generate combination of order 1 to max_order 
+    for [1, 2, ..., n] input
+
+    Parameters
+    ----------
+    n: int
+        input elements range
+
+    max_order: int
+        maximum input for combinations
+
+    Returns
+    -------
+    comb : list[MULTI_RESIDUE]
+        result of combinations
+
+    Examples
+    --------
+    >> assert(mk_combine(3, 2) == [(0, ), (1, ), (2, ), (0, 1), (0, 2), (1, 2)])
+    """
     ret: list[MULTI_RESIDUE] = []
     for order in range(1, max_order + 1):
         once: list[MULTI_RESIDUE] = list(
@@ -71,7 +107,25 @@ def mk_combine_with_k(
     """
     connect the combination of (1, 2, ...,n) from order 1 to max_order, which must contains k.
 
-    mk_combine_with_k(1, 2, 3) --> (1), (1, 0), (1, 2), (0, 1, 2)
+    Parameters
+    ----------
+    k: int
+        must contain element
+
+    n: int
+        input elements range
+
+    max_order: int
+        maximum input for combinations
+
+    Returns
+    -------
+    comb : list[MULTI_RESIDUE]
+        result of combinations
+
+    Examples
+    --------
+    >> assert(mk_combine(3, 2) == [(0, ), (1, ), (2, ), (0, 1), (0, 2), (1, 2)])
     """
     k_set = set(k)
     ret: list[MULTI_RESIDUE] = []
@@ -88,34 +142,12 @@ def mk_combine_with_k(
     return ret
 
 
-def gen_lower_base(
-    sorted_at_key: MULTI_RESIDUE,
-) -> list[tuple[MULTI_RESIDUE]]:
-
-    ret: list[tuple[MULTI_RESIDUE]] = [(sorted_at_key,)]
-    if len(sorted_at_key) == 1:
-        return ret
-    sorted_at_key = cast(MULTI_RESIDUE, sorted_at_key)
-    # 获得基准组合
-    ret.append(tuple((i,) for i in sorted_at_key))
-    if len(sorted_at_key) == 2:
-        return ret
-    # 获得低一阶的全部组合
-    # (1, 2, 3) = (1) + (2, 3) / (2) + (1, 3) / (3) + (1, 2)
-    for i in sorted_at_key:
-        tmp = list(sorted_at_key)
-        tmp.__delitem__(bisect_left(tmp, i))
-        one: tuple[MULTI_RESIDUE] = tuple([tuple(tmp), (i,)])
-        ret.append(one)
-    return ret
-
-
 def get_epi_from_diff(
     diff: dict[SEQ_DIFF, float], possiable_keys: list[SEQ],
 ) -> EPI_EACH_RESIDUE:
     """
     calaulate averaging epistasis value from epistasis delta
-    by Linear Regression
+    by Graph
 
     Parameters
     ----------
@@ -130,14 +162,7 @@ def get_epi_from_diff(
     epi_values : EPI_EACH_RESIDUE
         averaging epistasis value of all variance combination in each residue
     """
-    # 研究位点作为点，邻接组作为边，构图
-    # 直接做最小二乘法计算
-    # D = [0, d1, d2, d3, ...]
-    # V = [v0, v1, v2, ...]
-    # H = [1, 1, 1, ..., 1]
-    # H =  [..., 1, -1, ...]
     G = nx.Graph()
-    # 研究位点作为点，邻接组作为边，构图
     diff_keys = list(diff.keys())
     keys_index = {key: i for i, key in enumerate(possiable_keys)}
     epi_values = {key: 0.0 for key in possiable_keys}
@@ -171,6 +196,22 @@ def get_epi_from_diff(
 def fetch_lower_select(
     lower_multi_res: MULTI_RESIDUE, sorted_at_key: MULTI_RESIDUE
 ) -> MULTI_RESIDUE:
+    """
+    pick lower_multi_res by sequence of sorted_at_key
+
+    Parameters
+    ----------
+    lower_multi_res: MULTI_RESIDUE
+        pick source of residues
+
+    sorted_at_key: MULTI_RESIDUE
+        key to be sorted and fetch index
+
+    Returns
+    -------
+    epi_values : EPI_EACH_RESIDUE
+        averaging epistasis value of all variance combination in each residue
+    """
     index = argsort(sorted_at_key)
     res_to_ind = dict(zip(sorted_at_key, index))
     return tuple(res_to_ind[i] for i in lower_multi_res)

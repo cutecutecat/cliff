@@ -106,14 +106,6 @@ class Dictionary:
 
     @classmethod
     def from_factory(cls, src: Union[list[str], str]) -> Dictionary:
-        if type(src) == str:
-            src = cast(str, src)
-            with open(src, "r") as f:
-                dictionary_str = f.read()
-            chars = dictionary_str.rstrip("\n").lstrip("\n").split("\n")
-            return cls.from_factory(chars)
-
-        src = cast(list[str], src)
         dic = cls()
         dic.chars = set(src)
         return dic

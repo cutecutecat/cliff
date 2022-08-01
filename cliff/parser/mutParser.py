@@ -24,13 +24,14 @@ class MutParser(Parser):
             assert (
                 now[index] == mut[0]
             ), f"mismatch between mutation {mut[0]}{mut[1:-1]} and wild-type {now[index]}{index}"
-            now = now[:index] + mut[-1] + now[index + 1 :]
+            now = now[:index] + mut[-1] + now[index + 1:]
         return now
 
     @classmethod
     def parse(cls, data: Union[str, pd.DataFrame], args: MutArgs) -> Scenery:
         if type(data) == str:
-            file = pd.read_csv(data)
+            file = pd.read_csv(
+                data, dtype={args.mutation_label: str, args.fitness_label: float})
             return cls.parse(file, args)
 
         data = cast(pd.DataFrame, data)
@@ -39,6 +40,7 @@ class MutParser(Parser):
         )
 
         sce = Scenery()
+        data[args.mutation_label].fillna('', inplace=True)
         sce.sequence = (
             data[args.mutation_label]
             .apply(cls.generate_mut_seq, args=(args.wile_type, args.vt_offset))

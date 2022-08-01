@@ -1,0 +1,9 @@
+variant,score
+,0.1
+A3T,0.2
+A2T,0.4
+A1T,0.3
+A2T:A3T,0.3
+A1T:A3T,0.6
+A1T:A2T,0.8
+A1T:A2T:A3T,1.0

@@ -2,11 +2,11 @@ from functools import cmp_to_key
 from itertools import combinations, product, zip_longest
 import logging
 import sys
-from typing import Union, cast
-import matplotlib as mpl
+from typing import Union
+
+from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
-
 import numpy as np
 from joblib import Parallel, delayed
 
@@ -29,16 +29,16 @@ class Epi2Show:
         else:
             return (a > b) - (a < b)
 
-    def __init__(self, varible: tuple[str], possible_bases: set[MULTI_RESIDUE], epi: dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
-        self.max_keys_num = max(max(b) for b in possible_bases) + 1
+    def __init__(self, varible: tuple[str], possible_keys: set[MULTI_RESIDUE], epi: dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
+        self.max_keys_num = max(max(b) for b in possible_keys) + 1
         self.varibles = varible
         self.varibles_index = {key: i for i, key in enumerate(varible)}
 
-        self.possible_bases: list[MULTI_RESIDUE] = sorted(
-            list(possible_bases), key=cmp_to_key(self.sort_key))
+        self.possible_keys: list[MULTI_RESIDUE] = sorted(
+            list(possible_keys), key=cmp_to_key(self.sort_key))
         self.epi = epi
-        self.orders = [len(base) for base in self.possible_bases]
-        self.cols = sum([len(epi[base]) for base in self.possible_bases])
+        self.orders = [len(base) for base in self.possible_keys]
+        self.cols = sum([len(epi[base]) for base in self.possible_keys])
 
         # Prepare an cycle of colors
         max_order = max(self.orders)
@@ -48,15 +48,15 @@ class Epi2Show:
         self.color_cycle *= color_scalar
 
         select = []
-        for base in self.possible_bases:
+        for base in self.possible_keys:
             select.extend([len(base)] * len(epi[base]))
-        self.colors_for_graph = np.array([mpl.colors.colorConverter.to_rgba(
+        self.colors_for_graph = np.array([colors.colorConverter.to_rgba(
             self.color_cycle[i - 1]) for i in select])
         # Prepare figure
         self.fig = plt.figure()
-        gs = mpl.gridspec.GridSpec(3, 1,
-                                   height_ratios=[1, 1, 0.3],
-                                   hspace=0.00)
+        gs = gridspec.GridSpec(3, 1,
+                               height_ratios=[1, 1, 0.3],
+                               hspace=0.00)
 
         ax = [plt.subplot(gs[0])]
         ax.append(plt.subplot(gs[1], sharex=ax[0]))
@@ -80,7 +80,7 @@ class Epi2Show:
 
     def plot(self) -> Figure:
         values = []
-        for bases in self.possible_bases:
+        for bases in self.possible_keys:
             inner_dict = self.epi[bases]
             chars = sorted(inner_dict.keys())
             values.extend([inner_dict[c] for c in chars])
@@ -94,7 +94,7 @@ class Epi2Show:
         residue_corr = np.zeros((self.max_keys_num, self.cols, 4))
 
         chars_table = []
-        for bases in self.possible_bases:
+        for bases in self.possible_keys:
             for chars, _ in self.epi[bases].items():
                 residue_corr[bases, now_at, :] = self.colors_for_graph[now_at]
 
@@ -131,10 +131,10 @@ class Epistasis:
         # inner calculator varibles
         self.epi_net: EPI_NET = {}
         # TODO: remove
-        self.possible_bases: set[MULTI_RESIDUE] = set()
+        self.possible_keys: set[MULTI_RESIDUE] = set()
 
     def to_draw(self, epi: dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]) -> Epi2Show:
-        return Epi2Show(self.variables, self.possible_bases, epi)
+        return Epi2Show(self.variables, self.possible_keys, epi)
 
     def cal_epi_link(
         self, neighbour
@@ -206,16 +206,19 @@ class Epistasis:
 
     def calculate(self) -> dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]:
         """
-        ret: {(0, 1):{("A","B"): 0.1, ("A","C"): 1.2, ("B","C"): 0.5}}
+        calculate epistasis of a scenery
+
+        Returns
+        -------
+        epistasis : dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]
+            epistasis of scenery
         """
-        # 计算上位效应
         epi_order_keys: list[MULTI_RESIDUE] = []
         for i in range(1, self.max_order + 1):
             epi_order_keys.extend(
                 list(combinations(range(self.sequence_length), i)))
             if i < self.max_order + 1:
-                self.possible_bases.update(set(epi_order_keys))
-            # 此处可做并行优化
+                self.possible_keys.update(set(epi_order_keys))
         all_ans = Parallel(n_jobs=len(epi_order_keys))(delayed(self.calculate_order)(
             sorted_at_key) for sorted_at_key in epi_order_keys)
 
