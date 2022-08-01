@@ -2,7 +2,7 @@ from __future__ import annotations
 from os import getcwd
 from os.path import join
 from itertools import product
-from typing import cast, Union, Tuple, List, Dict
+from typing import cast, Union, Tuple, List, Dict, Set
 
 from tqdm import tqdm
 
@@ -26,7 +26,7 @@ class Neighbourhood:
         self,
         use_residues: Tuple[MULTI_RESIDUE],
         sequence: List[str],
-        variables: set[str],
+        variables: Set[str],
         tqdm_enable: bool,
     ) -> None:
         self.sequence: List[str] = sequence
@@ -102,7 +102,7 @@ class Neighbourhood:
 
 class Dictionary:
     def __init__(self) -> None:
-        self.chars: set[str]
+        self.chars: Set[str]
 
     @classmethod
     def from_factory(cls, src: Union[List[str], str]) -> Dictionary:
@@ -120,7 +120,7 @@ class MetaData:
 
         self.dictionary = Dictionary.from_factory(chars)
 
-        self.variables: set[str] = set(self.dictionary.chars)
+        self.variables: Set[str] = set(self.dictionary.chars)
 
         # set attributes
         self.sequence_length: int = len(scenery.sequence[0])

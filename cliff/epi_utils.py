@@ -1,6 +1,6 @@
 from bisect import insort
 from itertools import combinations
-from typing import Generator, Union, cast, List, Tuple, Dict
+from typing import Generator, Union, cast, List, Tuple, Dict, Set
 
 import networkx as nx
 
@@ -169,7 +169,7 @@ def get_epi_from_diff(
 
     edges = [(keys_index[diff[0]], keys_index[diff[1]]) for diff in diff_keys]
     G.add_edges_from(edges)
-    rings: Generator[set[int], None, None] = nx.connected_components(G)
+    rings: Generator[Set[int], None, None] = nx.connected_components(G)
 
     for ring in rings:
         G_subset = G.subgraph(ring)

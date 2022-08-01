@@ -2,7 +2,7 @@ from functools import cmp_to_key
 from itertools import combinations, product, zip_longest
 import logging
 import sys
-from typing import Union
+from typing import Union, Set
 
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
@@ -29,7 +29,7 @@ class Epi2Show:
         else:
             return (a > b) - (a < b)
 
-    def __init__(self, varible: Tuple[str], possible_keys: set[MULTI_RESIDUE], epi: Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
+    def __init__(self, varible: Tuple[str], possible_keys: Set[MULTI_RESIDUE], epi: Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
         self.max_keys_num = max(max(b) for b in possible_keys) + 1
         self.varibles = varible
         self.varibles_index = {key: i for i, key in enumerate(varible)}
@@ -131,7 +131,7 @@ class Epistasis:
         # inner calculator varibles
         self.epi_net: EPI_NET = {}
         # TODO: remove
-        self.possible_keys: set[MULTI_RESIDUE] = set()
+        self.possible_keys: Set[MULTI_RESIDUE] = set()
 
     def to_draw(self, epi: Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]) -> Epi2Show:
         return Epi2Show(self.variables, self.possible_keys, epi)
@@ -177,7 +177,7 @@ class Epistasis:
         # 清理diff_group/keys
         diff_group = {key: value for key,
                       value in diff_group.items() if len(value) > 0}
-        keys_set: set[SEQ] = set()
+        keys_set: Set[SEQ] = set()
         for key, _ in diff_group.items():
             src, tgt = key
             if src not in keys_set:
