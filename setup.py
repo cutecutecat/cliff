@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-from distutils.core import setup
 import os
 from setuptools import find_packages, setup
 
