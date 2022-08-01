@@ -114,7 +114,7 @@ class Epi2Show:
         return self.fig
 
 
-class Epistasis:  # pylint: disable=too-few-public-methods
+class Epistasis:
     def __init__(
         self, scenery: Scenery, max_order: int, variables: Union[List[str], str]
     ) -> None:
@@ -131,7 +131,6 @@ class Epistasis:  # pylint: disable=too-few-public-methods
 
         # inner calculator varibles
         self.epi_net: EpiNet = {}
-        # TODO: remove
         self.possible_keys: Set[MultiResidue] = set()
 
     def to_draw(self, epi: Dict[MultiResidue, EpiResidue]) -> Epi2Show:

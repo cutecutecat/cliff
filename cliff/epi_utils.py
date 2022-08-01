@@ -95,13 +95,13 @@ def mk_combine(num: int, max_order: int) -> List[MultiResidue]:
     ret: List[MultiResidue] = []
     for order in range(1, max_order + 1):
         once: List[MultiResidue] = list(
-            combinations([j for j in range(num)], order))
+            combinations(list(range(num)), order))
         ret.extend(once)
     return ret
 
 
 def mk_combine_with_k(
-    k: MultiResidue, n: int, max_order: int
+    k: MultiResidue, num: int, max_order: int
 ) -> List[MultiResidue]:
     """
     connect the combination of (1, 2, ...,n) from order 1 to max_order, which must contains k.
@@ -131,7 +131,7 @@ def mk_combine_with_k(
     for order in range(0, max_order):
         other: List[List[int]] = [
             list(res)
-            for res in combinations([j for j in range(n) if j not in k_set], order)
+            for res in combinations([j for j in range(num) if j not in k_set], order)
         ]
         for res in other:
             for add in k:
@@ -162,22 +162,18 @@ def get_epi_from_diff(
         averaging epistasis value of all variance combination in each residue
     """
     graph = nx.Graph()
-    diff_keys = list(diff.keys())
     keys_index = {key: i for i, key in enumerate(possiable_keys)}
     epi_values = {key: 0.0 for key in possiable_keys}
 
-    edges = [(keys_index[diff[0]], keys_index[diff[1]]) for diff in diff_keys]
-    graph.add_edges_from(edges)
+    graph.add_edges_from(
+        [(keys_index[diff[0]], keys_index[diff[1]]) for diff in list(diff.keys())])
     rings: Generator[Set[int], None, None] = nx.connected_components(graph)
 
     for ring in rings:
-        graph_subset = graph.subgraph(ring)
-        edges = nx.bfs_edges(graph_subset, 0)
-        edges = list(edges)
+        edges = list(nx.bfs_edges(graph.subgraph(ring), 0))
         for edge in edges:
             edge = cast(Tuple[int, int], edge)
-            src, tgt = edge
-            src_seq, tgt_seq = possiable_keys[src], possiable_keys[tgt]
+            src_seq, tgt_seq = possiable_keys[edge[0]], possiable_keys[edge[1]]
             # one of (src_seq, tgt_seq) / (tgt_seq, src_seq) must in diff
             delta = (
                 diff[(src_seq, tgt_seq)]
@@ -217,5 +213,6 @@ def fetch_lower_select(
 
 
 def argsort(seq):
+    """sort and return index"""
     # http://stackoverflow.com/questions/3071415/efficient-method-to-calculate-the-rank-vector-of-a-list-in-python
     return sorted(range(len(seq)), key=seq.__getitem__)

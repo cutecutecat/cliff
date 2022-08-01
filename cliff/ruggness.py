@@ -6,7 +6,7 @@ import numpy as np
 from cliff.metadata import MetaData
 
 
-class Ruggness:  # pylint: disable=too-few-public-methods
+class Ruggness:
     """Cauculation of dataset Ruggness"""
 
     def __init__(self, meta: MetaData) -> None:

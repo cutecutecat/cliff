@@ -1,6 +1,8 @@
 """abstract interface for parser"""
 import abc
-from typing import List
+from typing import Any, List, Union
+
+import pandas as pd
 
 
 class Scenery:
@@ -15,7 +17,7 @@ class Parser(metaclass=abc.ABCMeta):
     """
     @classmethod
     @abc.abstractmethod
-    def parse(cls) -> Scenery:
+    def parse(cls, data: Union[str, pd.DataFrame], args: Any) -> Scenery:
         """
         generate scenery from source
         """

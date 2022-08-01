@@ -6,7 +6,7 @@ import pandas as pd
 from .base import Parser, Scenery
 
 
-class MutArgs:  # pylint: disable=too-few-public-methods
+class MutArgs:
     """arguments for `mutation` parser"""
     mutation_label: str
     fitness_label: str
@@ -15,15 +15,15 @@ class MutArgs:  # pylint: disable=too-few-public-methods
     vt_offset: int
 
 
-class MutParser(Parser):  # pylint: disable=too-few-public-methods
+class MutParser(Parser):
     """parser for `mutation` dataset"""
 
     @staticmethod
-    def generate_mut_seq(mut_line: str, wt: str, vt_offset: int) -> str:
+    def generate_mut_seq(mut_line: str, wild_type: str, vt_offset: int) -> str:
         if len(mut_line) == 0:
-            return wt
+            return wild_type
         muts = mut_line.split(":")
-        now = wt
+        now = wild_type
         for mut in muts:
             index = int(mut[1:-1]) + vt_offset - 1
             assert (
@@ -34,7 +34,7 @@ class MutParser(Parser):  # pylint: disable=too-few-public-methods
 
     @classmethod
     def parse(cls, data: Union[str, pd.DataFrame], args: MutArgs) -> Scenery:
-        if type(data) == str:
+        if isinstance(data, str):
             file = pd.read_csv(
                 data, dtype={args.mutation_label: str, args.fitness_label: float})
             return cls.parse(file, args)

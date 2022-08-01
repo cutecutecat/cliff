@@ -45,9 +45,9 @@ class Neighbourhood:
         }
         # used for inner calculation
         # [((0, 1), (A, B)), (2, A)]
-        self.SUBSTITUDE_TUPLE: List[Tuple[MultiResidue, Seq]] = []
+        self.substitude_tuple: List[Tuple[MultiResidue, Seq]] = []
         for res in use_residues:
-            self.SUBSTITUDE_TUPLE.extend(
+            self.substitude_tuple.extend(
                 [(res, seq) for seq in self.res_variables[res]]
             )
 
@@ -70,12 +70,12 @@ class Neighbourhood:
         neighbour: Dict[int, List[NeighbourItem]] = {
             i: [] for i in range(self.sequence_num)
         }
-        merge_iter = product(range(self.sequence_num), self.SUBSTITUDE_TUPLE)
+        merge_iter = product(range(self.sequence_num), self.substitude_tuple)
         if self.tqdm_enable:
             merge_iter = tqdm(
                 merge_iter,
                 desc="creating neighbour",
-                total=self.sequence_num * len(self.SUBSTITUDE_TUPLE),
+                total=self.sequence_num * len(self.substitude_tuple),
             )
         for seq_index, (sub_index, sub_char) in merge_iter:
             seq_index, sub_index, sub_char = cast(
