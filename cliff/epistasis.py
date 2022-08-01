@@ -1,3 +1,4 @@
+"""Cauculation of dataset Epistasis"""
 from functools import cmp_to_key
 from itertools import combinations, product, zip_longest
 import logging
@@ -32,8 +33,10 @@ LARGE = sys.float_info.max
 
 class Epi2Show:
     """module for plot Epistasis"""
+
     @staticmethod
     def sort_key(one: Tuple[int], two: Tuple[int]):
+        """sorted two tuple by length then elements"""
         first_cmp = (len(one) > len(two)) - (len(one) < len(two))
         if first_cmp != 0:
             return first_cmp
@@ -83,6 +86,7 @@ class Epi2Show:
 
     @staticmethod
     def invisible(axis):
+        """make axis invisible"""
         for tick in axis.get_major_ticks():
             tick.tick1line.set_visible(False)
             tick.tick2line.set_visible(False)
@@ -90,6 +94,7 @@ class Epi2Show:
             tick.label2.set_visible(False)
 
     def plot(self) -> Figure:
+        """draw a graph of Epistasis"""
         values = []
         for bases in self.possible_keys:
             inner_dict = self.epi[bases]

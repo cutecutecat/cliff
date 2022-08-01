@@ -53,6 +53,7 @@ class Neighbourhood:
 
     @staticmethod
     def substitude(target: str, index: MultiResidue, sub: Seq) -> str:
+        """generate a mutation of a sequence"""
         ret = []
         last = 0
         for i, res in enumerate(index):
@@ -106,17 +107,22 @@ class Neighbourhood:
 
 
 class Dictionary:
+    """used variables of sequence"""
+
     def __init__(self) -> None:
         self.chars: Set[str]
 
     @classmethod
     def from_factory(cls, src: Union[List[str], str]) -> Dictionary:
+        """make a distionary"""
         dic = cls()
         dic.chars = set(src)
         return dic
 
 
 class MetaData:
+    """a model for mutation dataset"""
+
     def __init__(
         self,
         scenery: Scenery,
@@ -146,6 +152,7 @@ class MetaData:
     def get_neighbour(
         self, use_keys: Tuple[MultiResidue] = tuple(), tqdm_enable=True
     ) -> None:
+        """fetch the neighbour adjacency list"""
         use_keys = tuple((i,) for i in range(self.sequence_length))
         self.neighbour: Dict[int, Tuple[NeighbourItem]] = Neighbourhood(
             use_keys, self.sequence, self.variables, tqdm_enable
