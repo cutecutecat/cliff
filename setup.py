@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""install setup"""
 import os
 from setuptools import find_packages, setup
 

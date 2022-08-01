@@ -37,8 +37,7 @@ class Epi2Show:
         first_cmp = (len(one) > len(two)) - (len(one) < len(two))
         if first_cmp != 0:
             return first_cmp
-        else:
-            return (one > two) - (one < two)
+        return (one > two) - (one < two)
 
     def __init__(self, varible: Tuple[str], possible_keys: Set[MultiResidue],
                  epi: Dict[MultiResidue, EpiResidue]):
@@ -50,7 +49,7 @@ class Epi2Show:
             list(possible_keys), key=cmp_to_key(self.sort_key))
         self.epi = epi
         self.orders = [len(base) for base in self.possible_keys]
-        self.cols = sum([len(epi[base]) for base in self.possible_keys])
+        self.cols = sum(len(epi[base]) for base in self.possible_keys)
 
         # Prepare an cycle of colors
         max_order = max(self.orders)
@@ -110,7 +109,7 @@ class Epi2Show:
             for chars, _ in self.epi[bases].items():
                 residue_corr[bases, now_at, :] = self.colors_for_graph[now_at]
 
-                chars_table.append([c for c in chars])
+                chars_table.append(list(chars))
                 now_at += 1
         chars_col = list(zip_longest(*chars_table, fillvalue=''))
         self.chars_table.table(cellText=chars_col)
@@ -126,6 +125,8 @@ class Epi2Show:
 
 
 class Epistasis:
+    """Cauculation of dataset Ruggness"""
+
     def __init__(
         self, scenery: Scenery, max_order: int, variables: Union[List[str], str]
     ) -> None:
@@ -145,16 +146,17 @@ class Epistasis:
         self.possible_keys: Set[MultiResidue] = set()
 
     def to_draw(self, epi: Dict[MultiResidue, EpiResidue]) -> Epi2Show:
+        """plot Epistasis"""
         return Epi2Show(self.variables, self.possible_keys, epi)
 
     def cal_epi_link(
-        self, neighbour
+        self, target: NeighbourItem
     ) -> Dict[MultiResidue, List[Tuple[int, NeighbourItem]]]:
+        """calculate neighbour of every residue combinations"""
         epi_link: Dict[MultiResidue, List[Tuple[int, NeighbourItem]]] = {
             key: [] for key in mk_combine(self.sequence_length, self.max_order)
         }
-        # 此处可做并行优化
-        for seq_i_index, nearbys in neighbour.items():
+        for seq_i_index, nearbys in target.items():
             for neighbour in nearbys:
                 epi_keys = mk_combine_with_k(
                     neighbour.index, self.sequence_length, self.max_order
@@ -163,11 +165,12 @@ class Epistasis:
                     epi_link[key].append((seq_i_index, neighbour))
         return epi_link
 
-    def calculate_order(
+    def cal_order(
         self,
         sorted_at_key: MultiResidue,
         neighbour=None,
     ) -> EpiResidue:
+        """calculate Epistasis of a residue combinations"""
         used_base = sorted_at_key
         if neighbour is None:
             meta = MetaData(self.scenery, self.variables)
@@ -185,7 +188,6 @@ class Epistasis:
                 self.fitness[i] - self.fitness[neighbor.target]
             )
 
-        # 清理diff_group/keys
         diff_group = {key: value for key,
                       value in diff_group.items() if len(value) > 0}
         keys_set: Set[Seq] = set()
@@ -195,7 +197,7 @@ class Epistasis:
                 keys_set.add(src)
             if tgt not in keys_set:
                 keys_set.add(tgt)
-        # 根据diff_group计算平均差
+
         possiable_keys = list(keys_set)
         diff = {key: sum(value) / len(value)
                 for key, value in diff_group.items()}
@@ -206,11 +208,9 @@ class Epistasis:
 
     def sub(self, epi_value: EpiResidue, possiable_keys: List[Seq],
             sorted_at_key: MultiResidue):
-        # SUB操作，计算减去低阶量
-        # (0, 1, 2) - (0, 1) - (0, 2) - (1, 2) - (0) - (1) - (2)
+        """substitude lower-order contribution"""
         lower_base_comb = mk_combine_subset(sorted_at_key)
         for lower_base, seq in product(lower_base_comb, possiable_keys):
-            # 有可能低阶数据不存在，这时给一个nan指标
             lower_index = fetch_lower_select(lower_base, sorted_at_key)
             lower_seq = select_substr(seq, lower_index)
             epi_value[seq] -= self.epi_net[lower_base][lower_seq]
@@ -231,7 +231,7 @@ class Epistasis:
                 list(combinations(range(self.sequence_length), i)))
             if i < self.max_order + 1:
                 self.possible_keys.update(set(epi_order_keys))
-        all_ans = Parallel(n_jobs=len(epi_order_keys))(delayed(self.calculate_order)(
+        all_ans = Parallel(n_jobs=len(epi_order_keys))(delayed(self.cal_order)(
             sorted_at_key) for sorted_at_key in epi_order_keys)
 
         for (possiable_keys, epi_value), sorted_at_key in zip(all_ans, epi_order_keys):

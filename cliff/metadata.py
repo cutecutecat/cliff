@@ -64,9 +64,11 @@ class Neighbourhood:
 
     @staticmethod
     def select(target: str, index: MultiResidue) -> str:
+        """select some part of a str"""
         return "".join([target[i] for i in index])
 
     def prefetch_neighbour(self) -> Dict[int, Tuple[NeighbourItem]]:
+        """calculate and store the neighbour"""
         neighbour: Dict[int, List[NeighbourItem]] = {
             i: [] for i in range(self.sequence_num)
         }
@@ -98,6 +100,7 @@ class Neighbourhood:
         return {key: tuple(value) for key, value in neighbour.items()}
 
     def get(self) -> Dict[int, Tuple[NeighbourItem]]:
+        """store and return the neighbour"""
         neighbour = self.prefetch_neighbour()
         return neighbour
 
