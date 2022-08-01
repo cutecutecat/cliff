@@ -39,13 +39,13 @@ class Ruggness:
             zip(mutation_label, [[] for _ in range(len(mutation_label))])
         )
 
-        for i in range(self.sequence_length):
-            neighbour_of_one = self.neighbour[i]
-            items = filter(lambda x: x.target > i, neighbour_of_one)
+        for index in range(self.sequence_length):
+            neighbour_of_one = self.neighbour[index]
+            items = filter(lambda x: x.target > index, neighbour_of_one)
 
             for item in items:
                 mut_index = item.index[0]
-                diff_value = self.fitness[item.target] - self.fitness[i]
+                diff_value = self.fitness[item.target] - self.fitness[index]
                 mutation_derivation[f"{mut_index}{item.diff}"].append(
                     diff_value
                 )

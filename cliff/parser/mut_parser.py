@@ -20,6 +20,7 @@ class MutParser(Parser):
 
     @staticmethod
     def generate_mut_seq(mut_line: str, wild_type: str, vt_offset: int) -> str:
+        """generate mutation sequence of a sequence"""
         if len(mut_line) == 0:
             return wild_type
         muts = mut_line.split(":")

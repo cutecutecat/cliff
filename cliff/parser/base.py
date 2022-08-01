@@ -21,4 +21,3 @@ class Parser(metaclass=abc.ABCMeta):
         """
         generate scenery from source
         """
-        pass

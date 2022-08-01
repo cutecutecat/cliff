@@ -2,7 +2,7 @@ from functools import cmp_to_key
 from itertools import combinations, product, zip_longest
 import logging
 import sys
-from typing import Union, Set
+from typing import Union, Set, Tuple, Dict, List
 
 from matplotlib import colors, gridspec
 from matplotlib import pyplot as plt
@@ -12,7 +12,17 @@ from joblib import Parallel, delayed
 
 from cliff.metadata import MetaData, NeighbourItem
 from cliff.parser.base import Scenery
-from cliff.epi_utils import *
+from cliff.epi_utils import (select_substr,
+                             mk_combine_subset,
+                             mk_combine,
+                             mk_combine_with_k,
+                             get_epi_from_diff,
+                             fetch_lower_select,
+                             MultiResidue,
+                             EpiResidue,
+                             EpiNet,
+                             SeqDiff,
+                             Seq)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -21,13 +31,14 @@ LARGE = sys.float_info.max
 
 
 class Epi2Show:
+    """module for plot Epistasis"""
     @staticmethod
-    def sort_key(a: Tuple[int], b: Tuple[int]):
-        first_cmp = (len(a) > len(b)) - (len(a) < len(b))
+    def sort_key(one: Tuple[int], two: Tuple[int]):
+        first_cmp = (len(one) > len(two)) - (len(one) < len(two))
         if first_cmp != 0:
             return first_cmp
         else:
-            return (a > b) - (a < b)
+            return (one > two) - (one < two)
 
     def __init__(self, varible: Tuple[str], possible_keys: Set[MultiResidue],
                  epi: Dict[MultiResidue, EpiResidue]):
@@ -55,16 +66,16 @@ class Epi2Show:
             self.color_cycle[i - 1]) for i in select])
         # Prepare figure
         self.fig = plt.figure()
-        gs = gridspec.GridSpec(3, 1,
-                               height_ratios=[1, 1, 0.3],
-                               hspace=0.00)
+        grid_spec = gridspec.GridSpec(3, 1,
+                                      height_ratios=[1, 1, 0.3],
+                                      hspace=0.00)
 
-        ax = [plt.subplot(gs[0])]
-        ax.append(plt.subplot(gs[1], sharex=ax[0]))
-        ax.append(plt.subplot(gs[2], sharex=ax[0]))
-        self.bar_axis = ax[0]
-        self.residue_axis = ax[1]
-        self.chars_table = ax[2]
+        all_axis = [plt.subplot(grid_spec[0])]
+        all_axis.append(plt.subplot(grid_spec[1], sharex=all_axis[0]))
+        all_axis.append(plt.subplot(grid_spec[2], sharex=all_axis[0]))
+        self.bar_axis = all_axis[0]
+        self.residue_axis = all_axis[1]
+        self.chars_table = all_axis[2]
         # Set tick invisible
         for axis in [self.bar_axis.xaxis,
                      self.residue_axis.xaxis, self.residue_axis.yaxis,
@@ -158,7 +169,7 @@ class Epistasis:
         neighbour=None,
     ) -> EpiResidue:
         used_base = sorted_at_key
-        if neighbour == None:
+        if neighbour is None:
             meta = MetaData(self.scenery, self.variables)
             meta.get_neighbour(used_base, tqdm_enable=False)
             neighbour = meta.neighbour

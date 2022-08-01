@@ -77,7 +77,8 @@ def rug_seq(filename: str, symbol: str, fitness: str, chars: str):
 @click.option('-c', '--chars', help='input variables for sequence',
               default='ACDEFGHIKLMNPQRSTVWY', type=str)
 @click.option('-o', '--max_order', help='max order of epistasis calculation', type=int)
-def epi_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str, max_order: int):
+def epi_mut(filename: str, symbol: str, fitness: str, wild_type: str,
+            vt_offset: int, chars: str, max_order: int):
     """calculate epistasis on mutation format dataset"""
     click.echo('[Mutation] Dataset -> [Epistasis] cauculation')
     click.echo(f'file: {filename}')
