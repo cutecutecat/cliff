@@ -5,18 +5,16 @@ from typing import Generator, Union, cast, List, Tuple, Dict, Set
 
 import networkx as nx
 
-from cliff.metadata import SEQ, MULTI_RESIDUE
+from cliff.metadata import Seq, MultiResidue
 
-SEQ_DIFF = Tuple[SEQ, SEQ]
-VAL_EACH_RESIDUE = Dict[Tuple[MULTI_RESIDUE], float]
-EPI_EACH_RESIDUE = Dict[SEQ, float]
-EPI_NET = Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]
-EPI_NET_BASE = Dict[Tuple[MULTI_RESIDUE], EPI_NET]
+SeqDiff = Tuple[Seq, Seq]
+EpiResidue = Dict[Seq, float]
+EpiNet = Dict[MultiResidue, EpiResidue]
 
 
 def select_substr(
-    src: Union[str, SEQ, List[str]], select: Union[MULTI_RESIDUE, List[int]]
-) -> SEQ:
+    src: Union[str, Seq, List[str]], select: Union[MultiResidue, List[int]]
+) -> Seq:
     """
     select sequence subset from string
 
@@ -44,35 +42,35 @@ def select_substr(
 
 
 def mk_combine_subset(
-    all_res: Tuple[MULTI_RESIDUE],
-) -> List[Tuple[MULTI_RESIDUE]]:
+    all_res: Tuple[MultiResidue],
+) -> List[Tuple[MultiResidue]]:
     """
     generate combination of multiply residues
 
     Parameters
     ----------
-    all_res: Tuple[MULTI_RESIDUE]
+    all_res: Tuple[MultiResidue]
         several residues of comb input
 
     Returns
     -------
-    comb : List[Tuple[MULTI_RESIDUE]]
+    comb : List[Tuple[MultiResidue]]
         result of combinations
 
     Examples
     --------
     >> assert(mk_combine_subset(((1, 2), (3, 4))) == (((1, 2),), ((3, 4),), ((1, 2), (3, 4))))
     """
-    ret: List[Tuple[MULTI_RESIDUE]] = []
+    ret: List[Tuple[MultiResidue]] = []
     for order in range(1, len(all_res)):
-        once: List[Tuple[MULTI_RESIDUE]] = sorted(
+        once: List[Tuple[MultiResidue]] = sorted(
             list(combinations(all_res, order))
         )
         ret.extend(once)
     return ret
 
 
-def mk_combine(num: int, max_order: int) -> List[MULTI_RESIDUE]:
+def mk_combine(num: int, max_order: int) -> List[MultiResidue]:
     """
     generate combination of order 1 to max_order 
     for [1, 2, ..., n] input
@@ -87,24 +85,24 @@ def mk_combine(num: int, max_order: int) -> List[MULTI_RESIDUE]:
 
     Returns
     -------
-    comb : List[MULTI_RESIDUE]
+    comb : List[MultiResidue]
         result of combinations
 
     Examples
     --------
     >> assert(mk_combine(3, 2) == [(0, ), (1, ), (2, ), (0, 1), (0, 2), (1, 2)])
     """
-    ret: List[MULTI_RESIDUE] = []
+    ret: List[MultiResidue] = []
     for order in range(1, max_order + 1):
-        once: List[MULTI_RESIDUE] = list(
+        once: List[MultiResidue] = list(
             combinations([j for j in range(num)], order))
         ret.extend(once)
     return ret
 
 
 def mk_combine_with_k(
-    k: MULTI_RESIDUE, n: int, max_order: int
-) -> List[MULTI_RESIDUE]:
+    k: MultiResidue, n: int, max_order: int
+) -> List[MultiResidue]:
     """
     connect the combination of (1, 2, ...,n) from order 1 to max_order, which must contains k.
 
@@ -121,7 +119,7 @@ def mk_combine_with_k(
 
     Returns
     -------
-    comb : List[MULTI_RESIDUE]
+    comb : List[MultiResidue]
         result of combinations
 
     Examples
@@ -129,7 +127,7 @@ def mk_combine_with_k(
     >> assert(mk_combine(3, 2) == [(0, ), (1, ), (2, ), (0, 1), (0, 2), (1, 2)])
     """
     k_set = set(k)
-    ret: List[MULTI_RESIDUE] = []
+    ret: List[MultiResidue] = []
     for order in range(0, max_order):
         other: List[List[int]] = [
             list(res)
@@ -138,29 +136,29 @@ def mk_combine_with_k(
         for res in other:
             for add in k:
                 insort(res, add)
-        once: List[MULTI_RESIDUE] = [tuple(res) for res in other]
+        once: List[MultiResidue] = [tuple(res) for res in other]
         ret.extend(once)
     return ret
 
 
 def get_epi_from_diff(
-    diff: Dict[SEQ_DIFF, float], possiable_keys: List[SEQ],
-) -> EPI_EACH_RESIDUE:
+    diff: Dict[SeqDiff, float], possiable_keys: List[Seq],
+) -> EpiResidue:
     """
     calaulate averaging epistasis value from epistasis delta
     by Graph
 
     Parameters
     ----------
-    diff: Dict[SEQ_DIFF, float]
+    diff: Dict[SeqDiff, float]
         epistasis delta of each variance combination
 
-    possiable_keys: List[SEQ]
+    possiable_keys: List[Seq]
         list of variance combination
 
     Returns
     -------
-    epi_values : EPI_EACH_RESIDUE
+    epi_values : EpiResidue
         averaging epistasis value of all variance combination in each residue
     """
     graph = nx.Graph()
@@ -195,22 +193,22 @@ def get_epi_from_diff(
 
 
 def fetch_lower_select(
-    lower_multi_res: MULTI_RESIDUE, sorted_at_key: MULTI_RESIDUE
-) -> MULTI_RESIDUE:
+    lower_multi_res: MultiResidue, sorted_at_key: MultiResidue
+) -> MultiResidue:
     """
     pick lower_multi_res by sequence of sorted_at_key
 
     Parameters
     ----------
-    lower_multi_res: MULTI_RESIDUE
+    lower_multi_res: MultiResidue
         pick source of residues
 
-    sorted_at_key: MULTI_RESIDUE
+    sorted_at_key: MultiResidue
         key to be sorted and fetch index
 
     Returns
     -------
-    epi_values : EPI_EACH_RESIDUE
+    epi_values : EpiResidue
         averaging epistasis value of all variance combination in each residue
     """
     index = argsort(sorted_at_key)

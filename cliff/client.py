@@ -1,3 +1,4 @@
+"""intro of argument program"""
 import click
 
 from .parser import SeqParser, MutParser, SeqArgs, MutArgs
@@ -19,7 +20,7 @@ def cli():
 @click.option('-w', '--wild_type', help='wild type sequence of dataset', type=str)
 @click.option('-v', '--vt_offset', help='index offset of dataset', type=int, default=0)
 @click.option('-c', '--chars', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
-def rug_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str):  # pylint: disable=too-many-arguments
+def rug_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str):
     """calculate ruggness on mutation format dataset"""
     click.echo('[Mutation] Dataset -> [Ruggness] cauculation')
     click.echo(f'file: {filename}')
@@ -39,7 +40,7 @@ def rug_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset:
 
     calculator = Ruggness(meta)
     rug = calculator.calculate()
-    click.echo("Ruggness: {}".format(rug))
+    click.echo(f"Ruggness: {rug}")
 
 
 @cli.command()
@@ -63,7 +64,7 @@ def rug_seq(filename: str, symbol: str, fitness: str, chars: str):
 
     calculator = Ruggness(meta)
     rug = calculator.calculate()
-    click.echo("Ruggness: {}".format(rug))
+    click.echo(f"Ruggness: {rug}")
 
 
 @cli.command()
@@ -74,7 +75,7 @@ def rug_seq(filename: str, symbol: str, fitness: str, chars: str):
 @click.option('-v', '--vt_offset', help='index offset of dataset', type=int, default=0)
 @click.option('-c', '--chars', help='input variables for sequence', default='ACDEFGHIKLMNPQRSTVWY', type=str)
 @click.option('-o', '--max_order', help='max order of epistasis calculation', type=int)
-def epi_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str, max_order: int):  # pylint: disable=too-many-arguments
+def epi_mut(filename: str, symbol: str, fitness: str, wild_type: str, vt_offset: int, chars: str, max_order: int):
     """calculate epistasis on mutation format dataset"""
     click.echo('[Mutation] Dataset -> [Epistasis] cauculation')
     click.echo(f'file: {filename}')

@@ -29,13 +29,13 @@ class Epi2Show:
         else:
             return (a > b) - (a < b)
 
-    def __init__(self, varible: Tuple[str], possible_keys: Set[MULTI_RESIDUE],
-                 epi: Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]):
+    def __init__(self, varible: Tuple[str], possible_keys: Set[MultiResidue],
+                 epi: Dict[MultiResidue, EpiResidue]):
         self.max_keys_num = max(max(b) for b in possible_keys) + 1
         self.varibles = varible
         self.varibles_index = {key: i for i, key in enumerate(varible)}
 
-        self.possible_keys: List[MULTI_RESIDUE] = sorted(
+        self.possible_keys: List[MultiResidue] = sorted(
             list(possible_keys), key=cmp_to_key(self.sort_key))
         self.epi = epi
         self.orders = [len(base) for base in self.possible_keys]
@@ -130,17 +130,17 @@ class Epistasis:  # pylint: disable=too-few-public-methods
         self.max_order = max_order
 
         # inner calculator varibles
-        self.epi_net: EPI_NET = {}
+        self.epi_net: EpiNet = {}
         # TODO: remove
-        self.possible_keys: Set[MULTI_RESIDUE] = set()
+        self.possible_keys: Set[MultiResidue] = set()
 
-    def to_draw(self, epi: Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]) -> Epi2Show:
+    def to_draw(self, epi: Dict[MultiResidue, EpiResidue]) -> Epi2Show:
         return Epi2Show(self.variables, self.possible_keys, epi)
 
     def cal_epi_link(
         self, neighbour
-    ) -> Dict[MULTI_RESIDUE, List[Tuple[int, NeighbourItem]]]:
-        epi_link: Dict[MULTI_RESIDUE, List[Tuple[int, NeighbourItem]]] = {
+    ) -> Dict[MultiResidue, List[Tuple[int, NeighbourItem]]]:
+        epi_link: Dict[MultiResidue, List[Tuple[int, NeighbourItem]]] = {
             key: [] for key in mk_combine(self.sequence_length, self.max_order)
         }
         # 此处可做并行优化
@@ -155,16 +155,16 @@ class Epistasis:  # pylint: disable=too-few-public-methods
 
     def calculate_order(
         self,
-        sorted_at_key: MULTI_RESIDUE,
+        sorted_at_key: MultiResidue,
         neighbour=None,
-    ) -> EPI_EACH_RESIDUE:
+    ) -> EpiResidue:
         used_base = sorted_at_key
         if neighbour == None:
             meta = MetaData(self.scenery, self.variables)
             meta.get_neighbour(used_base, tqdm_enable=False)
             neighbour = meta.neighbour
         epi_link = self.cal_epi_link(neighbour)
-        diff_group: Dict[SEQ_DIFF, List[float]] = {}
+        diff_group: Dict[SeqDiff, List[float]] = {}
         used_neighbours = epi_link[sorted_at_key]
 
         for i, neighbor in used_neighbours:
@@ -178,7 +178,7 @@ class Epistasis:  # pylint: disable=too-few-public-methods
         # 清理diff_group/keys
         diff_group = {key: value for key,
                       value in diff_group.items() if len(value) > 0}
-        keys_set: Set[SEQ] = set()
+        keys_set: Set[Seq] = set()
         for key, _ in diff_group.items():
             src, tgt = key
             if src not in keys_set:
@@ -194,8 +194,8 @@ class Epistasis:  # pylint: disable=too-few-public-methods
 
         return possiable_keys, epi_values
 
-    def sub(self, epi_value: EPI_EACH_RESIDUE, possiable_keys: List[SEQ],
-            sorted_at_key: MULTI_RESIDUE):
+    def sub(self, epi_value: EpiResidue, possiable_keys: List[Seq],
+            sorted_at_key: MultiResidue):
         # SUB操作，计算减去低阶量
         # (0, 1, 2) - (0, 1) - (0, 2) - (1, 2) - (0) - (1) - (2)
         lower_base_comb = mk_combine_subset(sorted_at_key)
@@ -206,16 +206,16 @@ class Epistasis:  # pylint: disable=too-few-public-methods
             epi_value[seq] -= self.epi_net[lower_base][lower_seq]
         self.epi_net[sorted_at_key] = epi_value
 
-    def calculate(self) -> Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]:
+    def calculate(self) -> Dict[MultiResidue, EpiResidue]:
         """
         calculate epistasis of a scenery
 
         Returns
         -------
-        epistasis : Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]
+        epistasis : Dict[MultiResidue, EpiResidue]
             epistasis of scenery
         """
-        epi_order_keys: List[MULTI_RESIDUE] = []
+        epi_order_keys: List[MultiResidue] = []
         for i in range(1, self.max_order + 1):
             epi_order_keys.extend(
                 list(combinations(range(self.sequence_length), i)))

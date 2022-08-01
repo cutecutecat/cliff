@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 from cliff.parser.base import Scenery
 
-MULTI_RESIDUE = Tuple[int]
-SEQ = Tuple[str]
+MultiResidue = Tuple[int]
+Seq = Tuple[str]
 
 
 class NeighbourItem:
@@ -18,7 +18,7 @@ class NeighbourItem:
     target: int
     diff: str
     # 3(index from 0)
-    index: MULTI_RESIDUE
+    index: MultiResidue
 
 
 class Neighbourhood:
@@ -26,7 +26,7 @@ class Neighbourhood:
 
     def __init__(
         self,
-        use_residues: Tuple[MULTI_RESIDUE],
+        use_residues: Tuple[MultiResidue],
         sequence: List[str],
         variables: Set[str],
         tqdm_enable: bool,
@@ -40,19 +40,19 @@ class Neighbourhood:
         self.seq_to_index: Dict[str, int] = {
             seq: index for index, seq in enumerate(sequence)
         }
-        self.res_variables: Dict[MULTI_RESIDUE, Tuple[SEQ]] = {
+        self.res_variables: Dict[MultiResidue, Tuple[Seq]] = {
             res: tuple(product(variables, repeat=2)) for res in use_residues
         }
         # used for inner calculation
         # [((0, 1), (A, B)), (2, A)]
-        self.SUBSTITUDE_TUPLE: List[Tuple[MULTI_RESIDUE, SEQ]] = []
+        self.SUBSTITUDE_TUPLE: List[Tuple[MultiResidue, Seq]] = []
         for res in use_residues:
             self.SUBSTITUDE_TUPLE.extend(
                 [(res, seq) for seq in self.res_variables[res]]
             )
 
     @staticmethod
-    def substitude(target: str, index: MULTI_RESIDUE, sub: SEQ) -> str:
+    def substitude(target: str, index: MultiResidue, sub: Seq) -> str:
         ret = []
         last = 0
         for i, res in enumerate(index):
@@ -63,7 +63,7 @@ class Neighbourhood:
         return "".join(ret)
 
     @staticmethod
-    def select(target: str, index: MULTI_RESIDUE) -> str:
+    def select(target: str, index: MultiResidue) -> str:
         return "".join([target[i] for i in index])
 
     def prefetch_neighbour(self) -> Dict[int, Tuple[NeighbourItem]]:
@@ -79,8 +79,8 @@ class Neighbourhood:
             )
         for seq_index, (sub_index, sub_char) in merge_iter:
             seq_index, sub_index, sub_char = cast(
-                Tuple[int, MULTI_RESIDUE,
-                      SEQ], (seq_index, sub_index, sub_char),
+                Tuple[int, MultiResidue,
+                      Seq], (seq_index, sub_index, sub_char),
             )
             new_seq = self.substitude(
                 self.sequence[seq_index], sub_index, sub_char)
@@ -141,7 +141,7 @@ class MetaData:
         self.neighbour: Dict[int, Tuple[NeighbourItem]] = {}
 
     def get_neighbour(
-        self, use_keys: Tuple[MULTI_RESIDUE] = tuple(), tqdm_enable=True
+        self, use_keys: Tuple[MultiResidue] = tuple(), tqdm_enable=True
     ) -> None:
         use_keys = tuple((i,) for i in range(self.sequence_length))
         self.neighbour: Dict[int, Tuple[NeighbourItem]] = Neighbourhood(
