@@ -2,14 +2,14 @@ from __future__ import annotations
 from os import getcwd
 from os.path import join
 from itertools import product
-from typing import cast, Union
+from typing import cast, Union, Tuple, List, Dict
 
 from tqdm import tqdm
 
 from cliff.parser.base import Scenery
 
-MULTI_RESIDUE = tuple[int]
-SEQ = tuple[str]
+MULTI_RESIDUE = Tuple[int]
+SEQ = Tuple[str]
 
 
 class NeighbourItem:
@@ -24,26 +24,26 @@ class NeighbourItem:
 class Neighbourhood:
     def __init__(
         self,
-        use_residues: tuple[MULTI_RESIDUE],
-        sequence: list[str],
+        use_residues: Tuple[MULTI_RESIDUE],
+        sequence: List[str],
         variables: set[str],
         tqdm_enable: bool,
     ) -> None:
-        self.sequence: list[str] = sequence
+        self.sequence: List[str] = sequence
         self.tqdm_enable = tqdm_enable
 
         # inferred attributes
         self.sequence_length: int = len(sequence[0])
         self.sequence_num: int = len(self.sequence)
-        self.seq_to_index: dict[str, int] = {
+        self.seq_to_index: Dict[str, int] = {
             seq: index for index, seq in enumerate(sequence)
         }
-        self.res_variables: dict[MULTI_RESIDUE, tuple[SEQ]] = {
+        self.res_variables: Dict[MULTI_RESIDUE, Tuple[SEQ]] = {
             res: tuple(product(variables, repeat=2)) for res in use_residues
         }
         # used for inner calculation
         # [((0, 1), (A, B)), (2, A)]
-        self.SUBSTITUDE_TUPLE: list[tuple[MULTI_RESIDUE, SEQ]] = []
+        self.SUBSTITUDE_TUPLE: List[Tuple[MULTI_RESIDUE, SEQ]] = []
         for res in use_residues:
             self.SUBSTITUDE_TUPLE.extend(
                 [(res, seq) for seq in self.res_variables[res]]
@@ -64,8 +64,8 @@ class Neighbourhood:
     def select(target: str, index: MULTI_RESIDUE) -> str:
         return "".join([target[i] for i in index])
 
-    def prefetch_neighbour(self) -> dict[int, tuple[NeighbourItem]]:
-        neighbour: dict[int, list[NeighbourItem]] = {
+    def prefetch_neighbour(self) -> Dict[int, Tuple[NeighbourItem]]:
+        neighbour: Dict[int, List[NeighbourItem]] = {
             i: [] for i in range(self.sequence_num)
         }
         iter = product(range(self.sequence_num), self.SUBSTITUDE_TUPLE)
@@ -77,7 +77,7 @@ class Neighbourhood:
             )
         for seq_index, (sub_index, sub_char) in iter:
             seq_index, sub_index, sub_char = cast(
-                tuple[int, MULTI_RESIDUE,
+                Tuple[int, MULTI_RESIDUE,
                       SEQ], (seq_index, sub_index, sub_char),
             )
             new_seq = self.substitude(
@@ -95,7 +95,7 @@ class Neighbourhood:
             neighbour[seq_index].append(item)
         return {key: tuple(value) for key, value in neighbour.items()}
 
-    def get(self) -> dict[int, tuple[NeighbourItem]]:
+    def get(self) -> Dict[int, Tuple[NeighbourItem]]:
         neighbour = self.prefetch_neighbour()
         return neighbour
 
@@ -105,7 +105,7 @@ class Dictionary:
         self.chars: set[str]
 
     @classmethod
-    def from_factory(cls, src: Union[list[str], str]) -> Dictionary:
+    def from_factory(cls, src: Union[List[str], str]) -> Dictionary:
         dic = cls()
         dic.chars = set(src)
         return dic
@@ -115,7 +115,7 @@ class MetaData:
     def __init__(
         self,
         scenery: Scenery,
-        chars: Union[list[str], str],
+        chars: Union[List[str], str],
     ) -> None:
 
         self.dictionary = Dictionary.from_factory(chars)
@@ -124,24 +124,24 @@ class MetaData:
 
         # set attributes
         self.sequence_length: int = len(scenery.sequence[0])
-        self.sequence: list[str] = scenery.sequence
+        self.sequence: List[str] = scenery.sequence
 
         self.fitness = scenery.fitness
 
         # inferred attributes
         self.sequence_num: int = len(self.sequence)
-        self.seq_index: dict[str, int] = {
+        self.seq_index: Dict[str, int] = {
             seq: index for index, seq in enumerate(scenery.sequence)
         }
         assert len(self.sequence) == len(self.seq_index)
 
         # lazy attributes
-        self.neighbour: dict[int, tuple[NeighbourItem]] = {}
+        self.neighbour: Dict[int, Tuple[NeighbourItem]] = {}
 
     def get_neighbour(
-        self, use_keys: tuple[MULTI_RESIDUE] = tuple(), save=False, tqdm_enable=True
+        self, use_keys: Tuple[MULTI_RESIDUE] = tuple(), save=False, tqdm_enable=True
     ) -> None:
         use_keys = tuple((i,) for i in range(self.sequence_length))
-        self.neighbour: dict[int, tuple[NeighbourItem]] = Neighbourhood(
+        self.neighbour: Dict[int, Tuple[NeighbourItem]] = Neighbourhood(
             use_keys, self.sequence, self.variables, tqdm_enable
         ).get()

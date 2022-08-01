@@ -1,5 +1,5 @@
 from itertools import product
-
+from typing import Dict, List
 import numpy as np
 
 from cliff.metadata import MetaData
@@ -32,7 +32,7 @@ class Ruggness:
             )
             if n != k
         ]
-        mutation_derivation: dict[str, list[float]] = dict(
+        mutation_derivation: Dict[str, List[float]] = dict(
             zip(mutation_label, [[] for _ in range(len(mutation_label))])
         )
 

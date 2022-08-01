@@ -1,9 +1,10 @@
 import abc
+from typing import List
 
 
 class Scenery:
-    sequence: list[str]
-    fitness: list[float]
+    sequence: List[str]
+    fitness: List[float]
 
 
 class Parser(metaclass=abc.ABCMeta):

@@ -1,20 +1,20 @@
 from bisect import insort
 from itertools import combinations
-from typing import Generator, Union, cast
+from typing import Generator, Union, cast, List, Tuple, Dict
 
 import networkx as nx
 
 from cliff.metadata import SEQ, MULTI_RESIDUE
 
-SEQ_DIFF = tuple[SEQ, SEQ]
-VAL_EACH_RESIDUE = dict[tuple[MULTI_RESIDUE], float]
-EPI_EACH_RESIDUE = dict[SEQ, float]
-EPI_NET = dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]
-EPI_NET_BASE = dict[tuple[MULTI_RESIDUE], EPI_NET]
+SEQ_DIFF = Tuple[SEQ, SEQ]
+VAL_EACH_RESIDUE = Dict[Tuple[MULTI_RESIDUE], float]
+EPI_EACH_RESIDUE = Dict[SEQ, float]
+EPI_NET = Dict[MULTI_RESIDUE, EPI_EACH_RESIDUE]
+EPI_NET_BASE = Dict[Tuple[MULTI_RESIDUE], EPI_NET]
 
 
 def select_substr(
-    src: Union[str, SEQ, list[str]], select: Union[MULTI_RESIDUE, list[int]]
+    src: Union[str, SEQ, List[str]], select: Union[MULTI_RESIDUE, List[int]]
 ) -> SEQ:
     """
     select sequence subset from string
@@ -24,12 +24,12 @@ def select_substr(
     src: str
         target string to be select
 
-    select: list[int]
+    select: List[int]
         list of index to select
 
     Returns
     -------
-    substr : list[str]
+    substr : List[str]
         selected sub-string
 
     Examples
@@ -37,41 +37,41 @@ def select_substr(
     >> assert(select_substr("ABCDE", [0, 2, 3]) == ('A', 'C', 'E'))
     """
     if type(select) == set:
-        select = sorted(list(select))
-    select = cast(list[int], select)
+        select = sorted(List(select))
+    select = cast(List[int], select)
     return tuple(src[s] for s in select)
 
 
 def mk_combine_subset(
-    all_res: tuple[MULTI_RESIDUE],
-) -> list[tuple[MULTI_RESIDUE]]:
+    all_res: Tuple[MULTI_RESIDUE],
+) -> List[Tuple[MULTI_RESIDUE]]:
     """
     generate combination of multiply residues
 
     Parameters
     ----------
-    all_res: tuple[MULTI_RESIDUE]
+    all_res: Tuple[MULTI_RESIDUE]
         several residues of comb input
 
     Returns
     -------
-    comb : list[tuple[MULTI_RESIDUE]]
+    comb : List[Tuple[MULTI_RESIDUE]]
         result of combinations
 
     Examples
     --------
     >> assert(mk_combine_subset(((1, 2), (3, 4))) == (((1, 2),), ((3, 4),), ((1, 2), (3, 4))))
     """
-    ret: list[tuple[MULTI_RESIDUE]] = []
+    ret: List[Tuple[MULTI_RESIDUE]] = []
     for order in range(1, len(all_res)):
-        once: list[tuple[MULTI_RESIDUE]] = sorted(
+        once: List[Tuple[MULTI_RESIDUE]] = sorted(
             list(combinations(all_res, order))
         )
         ret.extend(once)
     return ret
 
 
-def mk_combine(n: int, max_order: int) -> list[MULTI_RESIDUE]:
+def mk_combine(n: int, max_order: int) -> List[MULTI_RESIDUE]:
     """
     generate combination of order 1 to max_order 
     for [1, 2, ..., n] input
@@ -86,16 +86,16 @@ def mk_combine(n: int, max_order: int) -> list[MULTI_RESIDUE]:
 
     Returns
     -------
-    comb : list[MULTI_RESIDUE]
+    comb : List[MULTI_RESIDUE]
         result of combinations
 
     Examples
     --------
     >> assert(mk_combine(3, 2) == [(0, ), (1, ), (2, ), (0, 1), (0, 2), (1, 2)])
     """
-    ret: list[MULTI_RESIDUE] = []
+    ret: List[MULTI_RESIDUE] = []
     for order in range(1, max_order + 1):
-        once: list[MULTI_RESIDUE] = list(
+        once: List[MULTI_RESIDUE] = list(
             combinations([j for j in range(n)], order))
         ret.extend(once)
     return ret
@@ -103,7 +103,7 @@ def mk_combine(n: int, max_order: int) -> list[MULTI_RESIDUE]:
 
 def mk_combine_with_k(
     k: MULTI_RESIDUE, n: int, max_order: int
-) -> list[MULTI_RESIDUE]:
+) -> List[MULTI_RESIDUE]:
     """
     connect the combination of (1, 2, ...,n) from order 1 to max_order, which must contains k.
 
@@ -120,7 +120,7 @@ def mk_combine_with_k(
 
     Returns
     -------
-    comb : list[MULTI_RESIDUE]
+    comb : List[MULTI_RESIDUE]
         result of combinations
 
     Examples
@@ -128,22 +128,22 @@ def mk_combine_with_k(
     >> assert(mk_combine(3, 2) == [(0, ), (1, ), (2, ), (0, 1), (0, 2), (1, 2)])
     """
     k_set = set(k)
-    ret: list[MULTI_RESIDUE] = []
+    ret: List[MULTI_RESIDUE] = []
     for order in range(0, max_order):
-        other: list[list[int]] = [
+        other: List[List[int]] = [
             list(res)
             for res in combinations([j for j in range(n) if j not in k_set], order)
         ]
         for res in other:
             for add in k:
                 insort(res, add)
-        once: list[MULTI_RESIDUE] = [tuple(res) for res in other]
+        once: List[MULTI_RESIDUE] = [tuple(res) for res in other]
         ret.extend(once)
     return ret
 
 
 def get_epi_from_diff(
-    diff: dict[SEQ_DIFF, float], possiable_keys: list[SEQ],
+    diff: Dict[SEQ_DIFF, float], possiable_keys: List[SEQ],
 ) -> EPI_EACH_RESIDUE:
     """
     calaulate averaging epistasis value from epistasis delta
@@ -151,10 +151,10 @@ def get_epi_from_diff(
 
     Parameters
     ----------
-    diff: dict[SEQ_DIFF, float]
+    diff: Dict[SEQ_DIFF, float]
         epistasis delta of each variance combination
 
-    possiable_keys: list[SEQ]
+    possiable_keys: List[SEQ]
         list of variance combination
 
     Returns
@@ -176,7 +176,7 @@ def get_epi_from_diff(
         edges = nx.bfs_edges(G_subset, 0)
         edges = list(edges)
         for edge in edges:
-            edge = cast(tuple[int, int], edge)
+            edge = cast(Tuple[int, int], edge)
             src, tgt = edge
             src_seq, tgt_seq = possiable_keys[src], possiable_keys[tgt]
             # one of (src_seq, tgt_seq) / (tgt_seq, src_seq) must in diff
